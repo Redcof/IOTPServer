@@ -1,22 +1,20 @@
-import commands as cmd
+import os
+import time
+import IOTP_CommandLine.commands as cmd
+from IOTPServerCore.utils import log
 
+_author_ = "int_soumen"
+_date_ = "2018-09-17"
 
 if __name__ == "__main__":
-	_version_ = "1.0.0"
-	print "Welcome to IOTP server version " + _version_
-	
-	while True:
-		u_cmd = raw_input("IOTP server:"+_version_+" >>> ")
-		u_cmd_comp = u_cmd.split(" ")
-		component = cmd._cmd_map[u_cmd_comp[0]]
-		u_cmd_comp.pop(0)	
-		if component:
-			component[1](u_cmd_comp)
-		elif u_cmd == "exit":
-			break;
-		else:
-			cmd._cmd_map["-h"][1]()
-		
-	print "Exiting IOTP server..."
-	
-	print "OK"
+    _version_ = "1.0.0"
+    print "Welcome to IOTP server version " + _version_
+
+    server_home = os.path.dirname(os.path.realpath(__file__))
+
+    if cmd.iotp_start(server_home):
+        while True:
+            time.sleep(1)
+            pass
+
+    log("END")

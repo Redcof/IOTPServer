@@ -1,5 +1,0 @@
-import SocketServer
-
-
-print "Python"
-

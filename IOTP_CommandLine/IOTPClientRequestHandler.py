@@ -1,10 +1,14 @@
-from IOTP_ServerCore.IOTPRequest import IOTPRequest, IOPTServiceType
+
+_author_ = 'int_soumen'
+_date_ = "27-07-2018"
 
 
-class IOTPClientRequestHandler(IOTPRequest):
+class IOTPClientRequestHandler:
+    pass
+
     def __init__(self):
-        IOTPRequest.__init__(self)
+        pass
 
-    def callback(self, connection, client_ip, formatted_data):
+    def callback(self, request, formatted_data):
         print formatted_data
-        connection.send("OK\n")
+        pass
