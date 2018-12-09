@@ -1,4 +1,5 @@
-from IOTP_CommandLine import commands as cmd
+import commands as cmd
+
 
 if __name__ == "__main__":
 	_version_ = "1.0.0"
@@ -12,7 +13,7 @@ if __name__ == "__main__":
 		if component:
 			component[1](u_cmd_comp)
 		elif u_cmd == "exit":
-			break
+			break;
 		else:
 			cmd._cmd_map["-h"][1]()
 		
