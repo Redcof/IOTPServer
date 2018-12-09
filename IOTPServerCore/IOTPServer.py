@@ -1,14 +1,10 @@
 # Python program to implement server side of chat room.
-import copy
-import json
+
 import socket
 from thread import *
 
-from IOTPServerCore.IOTPCommon import SLAVE_LIBRARY, SERVER_JSON_CONF
 from IOTPServerCore.IOTPEventManager import IOTPEventManager
 from IOTPServerCore.IOTPRequest import IOPTServiceType, IOTPRequest
-from IOTPServerCore.IOTPSlave import IOTPSlaveInfo
-from IOTPServerCore.utils import log, void
 
 _author_ = 'int_soumen'
 _date_ = "27-07-2018"
@@ -32,98 +28,19 @@ class IOTPServerCore():
         SIG_SLAVE_RESPONSE_RECEIVED,
     ))
 
-    def __init__(self, req_handler, server_home_dir, port=10700):  # 0 indicates any free port
+    def __init__(self, req_handler, port=10700):  # 0 indicates any free port
         self.PORT = port
-        self.HOST = "192.168.0.108"
+        self.HOST = "127.0.0.1"
         self.BACK_LOG = 20
         self.server = None
+        self.list_of_iotp_slaves = {}
         self.DEFAULT_BYTE_READ = 7
         self.RequestHandler = req_handler
-        self.server_home = server_home_dir
-
-        self.server_conf_status = False
-        self.init_server_conf()
-
-        if self.server_conf_status:
-            try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                s.connect((SERVER_JSON_CONF['gateway'], 80))
-                self.HOST = s.getsockname()[0]
-            except socket.error, e:
-                log(e)
-            except KeyError, e:
-                log(e)
-
-    def init_server_conf(self):
-        dir_path = self.server_home
-        j_file = open(dir_path + '/iotp.serverconf')
-        JSON = json.load(j_file, "ASCII")
-        try:
-            keys = ('copyright', 'date', 'author', 'name', 'id', 'username', 'password', 'gateway')
-            for k in keys:
-                SERVER_JSON_CONF[k] = copy.copy(JSON[k])
-
-            slave_group_json_arr = JSON["slave-group"]
-            if not isinstance(slave_group_json_arr, list):
-                raise KeyError
-
-            slave_group_list = []
-            # TODO: Loop Each Slave Group
-            for group_json_obj in slave_group_json_arr:
-                group_dict = {"name": group_json_obj['name'], 'id': group_json_obj['id']}
-
-                # get all slaves
-                slave_json_arr = group_json_obj["slaves"]
-                if not isinstance(slave_json_arr, list):
-                    raise KeyError
-                slave_list = []
-                # TODO: Loop Each Slave
-                for slave_json_obj in slave_json_arr:
-                    slave_dict = {"name": slave_json_obj['name'], 'id': slave_json_obj['id']}
-                    # get all operands
-                    operand_json_arr = slave_json_obj["operands"]
-                    if not isinstance(operand_json_arr, list):
-                        raise KeyError
-                    operand_list = []
-
-                    do_list = []
-                    ao_list = []
-                    # TODO: Loop Each Slave Operand
-                    for operand_json_obj in operand_json_arr:
-                        operand_dict = {"name": operand_json_obj['name'], 'id': operand_json_obj['id'],
-                                        'state': operand_json_obj['state']}
-                        operand_list.append(operand_dict)
-                        if str(operand_json_obj["type"]) == 'd':
-                            do_list.append("d{}".format(operand_json_obj["id"]))
-                        if str(operand_json_obj["type"]) == 'a':
-                            ao_list.append("a{}".format(operand_json_obj["id"]))
-
-                    slave_dict['operands'] = operand_list
-                    slave_list.append(slave_dict)
-                    # save th slave configuration
-                    SLAVE_LIBRARY[int(slave_json_obj["id"])] = IOTPSlaveInfo(int(slave_json_obj["id"]), do_list,
-                                                                             ao_list)
-                group_dict['slaves'] = slave_list
-                slave_group_list.append(group_dict)
-
-                # TODO Slave count check
-
-            SERVER_JSON_CONF['slave-group'] = slave_group_list
-
-            self.server_conf_status = True
-
-            print SERVER_JSON_CONF
-        except KeyError, e:
-            # clear all configuration as there is an error
-            log(e)
-            SLAVE_LIBRARY.clear()
-            self.server_conf_status = False
-        j_file.close()
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        self.HOST = s.getsockname()[0]
 
     def start(self):
-        if self.server_conf_status is False:
-            log("Configuration failed.")
-            return False
         if self.server is None:
             # configure the socket for start the IOTP server
             self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -131,14 +48,14 @@ class IOTPServerCore():
 
             # bind socket with IP and PORT
             try:
-                log("Server IP " + self.HOST)
-                log("Server PORT " + str(self.PORT))
+                print "Server IP " + self.HOST
+                print "Server PORT " + str(self.PORT)
                 self.server.bind((self.HOST, self.PORT))
                 # start listing to the incoming connection
                 start_new_thread(self.s_listen, ())
                 return True
-            except socket.error, e:
-                print e
+            except Exception, e:
+                print e.message
                 print "Unable to start server."
                 return False
 
@@ -150,79 +67,95 @@ class IOTPServerCore():
             # accept a new connection
             conn, addr = self.server.accept()
 
-            # start a thread with client request
+            # prints the address of the user that just connected
+            # print addr[0] + " connected"
+
+            # creates and individual thread for every user
+
             start_new_thread(self.client_thread, (conn, addr, IOTPRequest()))
 
     def stop(self):
         if self.server is not None:
-            for k in SLAVE_LIBRARY:
-                k.socket.close()
-            SLAVE_LIBRARY.clear()
+            for k in self.list_of_iotp_slaves:
+                self.list_of_iotp_slaves[k].close()
+                del self.list_of_iotp_slaves[k]
             self.server.close()
 
-    # handle client in a thread
-    def client_thread(self, incoming_conn, addr, request):
-        initial_information = True
+    # handle client
+    def client_thread(self, conn, addr, request):
+        req_sts = True
         # read client request line
-        client_data = self.fn_client_read_line(incoming_conn)
-
+        client_data = self.fn_client_read_line(conn)
         print "Client {} connected.".format(addr)
-        request.set_connection(incoming_conn)
+
+        request.set_connection(conn)
         request.set_ip(addr)
 
-        # byte_service = False
-        # iotp_service = False
-        # http_service = False
+        byte_service = False
+        iotp_service = False
+        http_service = False
 
-        # service_type_txt = ""
+        service_type = ""
 
         # check the Protocol as well as the type of the client
         if client_data.startswith(IOTProtocols.BYTE):
             request.set_type(IOPTServiceType.BYTE)
-            # byte_service = True
-            service_type_txt = "IOTP Slave"
-            log("Client{} Service Type: IOTP Slave.".format(addr))
-            self.handle_byte(request, incoming_conn, client_data, addr, service_type_txt)
-
+            byte_service = True
+            service_type = "IOTP Slave"
+            print "Client{} Service Type: IOTP Slave.".format(addr)
         elif client_data.startswith(IOTProtocols.IOTP):
             request.set_type(IOPTServiceType.IOTP)
-            # iotp_service = True
-            service_type_txt = "IOTP Master"
+            iotp_service = True
+            service_type = "IOTP Master"
             print "Client{} Service Type: IOTP Master.".format(addr)
-            self.handle_iotp(request, incoming_conn, client_data, addr, service_type_txt)
-
         elif client_data.startswith(IOTProtocols.HTTP):
             request.set_type(IOPTServiceType.HTTP)
-            # http_service = True
-            service_type_txt = "HTTP"
+            http_service = True
+            service_type = "HTTP"
             print "Client{} Service Type: HTTP.".format(addr)
-            self.handle_http(request, incoming_conn, client_data, addr, service_type_txt)
         else:
             # invalid client
-            incoming_conn.close()
-            print "Invalid Client Closed. {}".format(addr)
-            # return as not a valid client
+            conn.close()
+            print "Client {} {} Closed.".format(addr, service_type)
             return
 
-    """ Keep connection and handle byte slave """
+        # parse the request
+        # initiate the connection for first time.
+        req_sts = request.initiate_connection(client_data)
 
-    def hold_byte_slave(self, request, incoming_conn):
+        if req_sts is 200:
+            print "Client{} {} Request OK.".format(addr, service_type)
+            if iotp_service is True:
+                msg_frame = request.fn_prepare_slave_request(request.formatted_req)
+                print "Client{} {} Sending Command: {}".format(addr, msg_frame, service_type)
+                " Sending Request To IOTP Slave "
+                self.list_of_iotp_slaves[request.selected_slave_id].send(msg_frame+"\n")
+                " waiting for slave to response"
+                IOTPServerCore.event_manager.event_wait(IOTPServerCore.SIG_SLAVE_RESPONSE_RECEIVED)
+                info = IOTPServerCore.event_manager.get_event_extras()
+                " Send Response to IOTP Master App "
+                conn.send("200\n")
+                IOTPServerCore.event_manager.clear()
+            if byte_service is True:
+                self.list_of_iotp_slaves[request.selected_slave_id] = conn
+                conn.send("200\n")
+        else:
+            conn.send("{}\n".format(req_sts))
+
+        print "Client{} {} Request Status: {}.".format(addr,service_type, req_sts)
         formatted_data = True
-        req_sts = request.keep_conn
 
         while req_sts:
+            req_sts = request.keep_conn
             try:
                 if formatted_data:
+                    # request.callback(formatted_data)
                     # reads new data
-                    client_data = self.fn_client_read_line(incoming_conn)
-                    if client_data is None:
-                        # slave offline
-                        break
+                    client_data = self.fn_client_read_line(conn)
                     if client_data != "":
-                        """ Signal Event as response has been received """
-                        IOTPServerCore.event_manager.signal_event(IOTPServerCore.SIG_SLAVE_RESPONSE_RECEIVED,
-                                                                  client_data)
-                        # TODO process client data if require
+                        IOTPServerCore.event_manager.signal_event(IOTPServerCore.SIG_SLAVE_RESPONSE_RECEIVED, client_data)
+                        # formatted_data = request.fn_parser_func(client_data)
+                        # self.RequestHandler.callback(request, formatted_data)
                 else:
                     pass
                     # TODO Control Loop Break with INTERROGATION message
@@ -232,69 +165,18 @@ class IOTPServerCore():
             except:
                 continue
 
-    def handle_byte(self, request, incoming_conn, client_data, addr, service_type_txt):
-        # validate and init connection with slave
-        _init_info = request.initiate_connection(client_data)
+        conn.close()
+        print "Client {} {} Closed.".format(addr, service_type)
 
-        print "Client{} {} Request Status: {}.".format(addr, service_type_txt, _init_info)
+    # print addr[0] + "Closed."
 
-        """ Send reply to byte slave """
-        try:
-            incoming_conn.send("[{},{}]\n".format(_init_info[0], _init_info[1]))
-        except socket.error, e:
-            log(e)
-            return
+    # The following function simply removes the object
+    # from the list that was created at the beginning of
+    # the program
 
-        """ Handle Byte Slaves """
-        if _init_info[0] is 200:
-            pass
-            self.hold_byte_slave(request, incoming_conn)
-        try:
-            incoming_conn.close()
-        except:
-            pass
-        print "Byte Slave Closed: {}.".format(addr)
-
-    @staticmethod
-    def handle_iotp(request, incoming_conn, client_data, addr, service_type_txt):
-        """initiate the connection for first time."""
-        _init_info = request.initiate_connection(client_data)
-        info = ""
-        print "Client{} {} Request Status: {}.".format(addr, service_type_txt, _init_info)
-
-        if _init_info[0] is 200:
-            print "Client{} {} Request OK.".format(addr, service_type_txt)
-            msg_frame = request.fn_prepare_slave_request()
-            # print "Client{} {} Sending Command: {}".format(addr, msg_frame, service_type_txt)
-            " Sending Request To IOTP Slave "
-            try:
-                SLAVE_LIBRARY[request.selected_slave_id].socket.send(msg_frame + "\n")
-                # " waiting for slave to response "
-                IOTPServerCore.event_manager.event_wait(IOTPServerCore.SIG_SLAVE_RESPONSE_RECEIVED)
-                # clear the event
-                IOTPServerCore.event_manager.clear()
-                # get any extra data generate with this event,
-                info = IOTPServerCore.event_manager.get_event_extras()
-            except:
-                info = (503, "Slave offline")
-        elif _init_info[0] is 201:
-            info = json.dumps(_init_info[2])
-        else:
-            info = _init_info
-
-        """ Send reply to client """
-        try:
-            incoming_conn.send("{}\n".format(info))
-        except socket.error, e:
-            log(e)
-        try:
-            incoming_conn.close()
-        except:
-            pass
-        print "IOTP Client Closed: {}.".format(addr)
-
-    def handle_http(self, request, incoming_conn, client_data, addr, service_type_txt):
-        pass
+    def remove(self, connection):
+        if connection in self.list_of_iotp_slaves:
+            self.list_of_iotp_slaves.remove(connection)
 
     @staticmethod
     def fn_client_read_line(conn):
@@ -302,19 +184,10 @@ class IOTPServerCore():
         while True:
             try:
                 d = str(conn.recv(1))
-                if len(d) is 0:
-                    try:
-                        """ Trying with a CR to check connection """
-                        conn.sendall("\n")
-                    except:
-                        """ Server offline """
-                        string = None
-                        break
                 if d == "\n" or d == "\r":
                     break
                 string += d
                 continue
             except:
-                string = None
                 break
         return string

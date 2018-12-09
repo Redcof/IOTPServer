@@ -18,10 +18,11 @@ class IOTPEventManager:
 
     " Signal Event, with additional information if required "
 
-    def signal_event(self, signal, info=None):
+    def signal_event(self, signal, info = None):
         if signal in self.__signals:
             self.__all_signals += signal
             self.__info = info
+
 
     " Wait for signal -blocking "
 
@@ -44,6 +45,5 @@ class IOTPEventManager:
         self.__all_signals = 0
 
     " Get extrs information for the host "
-
     def get_event_extras(self):
         return self.__info

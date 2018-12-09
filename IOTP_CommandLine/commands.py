@@ -10,7 +10,7 @@ def iotp_help(options=[]):
         print key, ":", value[0]
 
 
-def iotp_start(server_home, options=()):
+def iotp_start(options=()):
     global bServer_status
     global iotp_server
     if bServer_status is False:
@@ -19,21 +19,20 @@ def iotp_start(server_home, options=()):
         iotp_req = iotp_req_handle.IOTPClientRequestHandler()
         # initialize server object
         if len(options) == 1:
-            iotp_server = int_serve.IOTPServerCore(iotp_req, server_home, int(options[0]))
+            iotp_server = int_serve.IOTPServerCore(iotp_req, int(options[0]))
         else:
-            iotp_server = int_serve.IOTPServerCore(iotp_req, server_home)
+            iotp_server = int_serve.IOTPServerCore(iotp_req)
         # start server
         if iotp_server.start() is True:
             bServer_status = True
             print "Server is started"
-        else:
-            return False
+
+
     else:
         print "Server already running."
-    return True
 
 
-def iptp_stop(options=()):
+def iptp_stop(options=[]):
     global bServer_status
     global iotp_server
     if bServer_status is True:
@@ -43,7 +42,7 @@ def iptp_stop(options=()):
         print "Server is closed."
 
 
-def iptp_stat(options=()):
+def iptp_stat(options=[]):
     global bServer_status
     if bServer_status is True:
         print "Server is online."
