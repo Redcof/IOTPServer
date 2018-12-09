@@ -1,12 +1,15 @@
 # Python program to implement server side of chat room.
+
+import socket
+from thread import *
+
 from IOTPServerCore.IOTPRequest import IOPTServiceType
 
 _author_ = 'int_soumen'
 _date_ = "27-07-2018"
 
-import socket
-import re as regex
-from thread import *
+
+
 
 
 class IOTProtocols:
@@ -20,7 +23,7 @@ class IOTProtocols:
 
 # IOTP server wrapper
 class IOTPServerCore():
-    def __init__(self, iotp_req, port = 10700):  # 0 indicates any free port
+    def __init__(self, iotp_req, port=10700):  # 0 indicates any free port
         self.PORT = port
         self.HOST = "127.0.0.1"
         self.BACK_LOG = 20
@@ -76,28 +79,34 @@ class IOTPServerCore():
     def client_thread(self, conn, addr):
         b_keep_loop = True
         # read client request line
-        connection_request = self.client_read_line(conn)
-        formatted_data = True  # let the callback to be called
+        client_data = self.fn_client_read_line(conn)
 
         self.req_handler_obj.set_connection(conn)
         self.req_handler_obj.set_ip(addr)
 
-        # check the Protocol as well as the type of the client
-        if connection_request.startswith(IOTProtocols.BYTE):
-            self.req_handler_obj.set_type(IOPTServiceType.BYTE)
-            formatted_data = self.request_parser_byte_uci(connection_request)
-            formate_func = self.request_parser_byte_uci
-            # list up the connection information
-            self.list_of_iotp_slaves.append(conn)
-        elif connection_request.startswith(IOTProtocols.IOTP):
-            self.req_handler_obj.set_type(IOPTServiceType.IOTP)
-            formatted_data = self.request_parser_iotp_uci(connection_request)
-            formate_func = self.request_parser_iotp_uci
-        elif connection_request.startswith(IOTProtocols.HTTP):
-            self.req_handler_obj.set_type(IOPTServiceType.HTTP)
+        byte = False
 
+        # check the Protocol as well as the type of the client
+        if client_data.startswith(IOTProtocols.BYTE):
+            self.req_handler_obj.set_type(IOPTServiceType.BYTE)
+            byte = True
+        elif client_data.startswith(IOTProtocols.IOTP):
+            self.req_handler_obj.set_type(IOPTServiceType.IOTP)
+        elif client_data.startswith(IOTProtocols.HTTP):
+            self.req_handler_obj.set_type(IOPTServiceType.HTTP)
+        else:
+            # invalid client
+            conn.close()
+            return
+
+        # parse the request
         # initiate the connection for first time.
-        self.req_handler_obj.initiate_connection(formatted_data)
+        b_keep_loop = self.req_handler_obj.initiate_connection(client_data)
+
+        if b_keep_loop is True and byte is True:
+            self.list_of_iotp_slaves.append(conn)
+
+        formatted_data = True
 
         while b_keep_loop:
             b_keep_loop = self.req_handler_obj.keep_conn
@@ -105,15 +114,19 @@ class IOTPServerCore():
                 if formatted_data:
                     self.req_handler_obj.callback(formatted_data)
                     # reads new data
-                    connection_request = conn.recv(self.req_handler_obj.chunk_size)
-                    formatted_data = formate_func(connection_request)
+                    client_data = self.fn_client_read_line(conn)
+                    formatted_data = self.req_handler_obj.fn_parser_func(client_data)
                 else:
-                    # message may have no content if the connection
-                    self.remove(conn)
-                    break
+                    pass
+                    # TODO Control Loop Break with INTERROGATION message
+                    # message may have no content if the connection closed by client side
+                    # self.remove(conn)
+                    # break
             except:
                 continue
-        # print addr[0] + "Closed."
+
+        conn.close()
+    # print addr[0] + "Closed."
 
     # The following function simply removes the object
     # from the list that was created at the beginning of
@@ -123,7 +136,8 @@ class IOTPServerCore():
         if connection in self.list_of_iotp_slaves:
             self.list_of_iotp_slaves.remove(connection)
 
-    def client_read_line(self, conn):
+    @staticmethod
+    def fn_client_read_line(conn):
         string = ""
         while True:
             try:
@@ -135,15 +149,3 @@ class IOTPServerCore():
             except:
                 break
         return string
-
-    def request_parser_iotp_uci(self, request_uci):
-        res = regex.match(
-            r"^iotp://(?P<slv_id>s[0-9]+)((?P<slv_qer>\?)|(/(((?P<anlg_id>a[0-2])?((?P<anlg_qer>\?)|(/(?P<anlg_val>[0-9]{1,4}))))|((?P<digt_id>d[0-7])?((?P<digt_qer>\?)|(/(?P<digt_st>[01])))))))$",
-            str(request_uci).lower(), regex.I | regex.M).groupdict()
-        return res
-
-    def request_parser_byte_uci(self, request_uci):
-        res = regex.match(
-            r"^byte://(?P<slv_id>[0-9]+)/d/(?P<digt_ctr>[0-7])/a/(?P<anlg_ctr>[0-2])$",
-            str(request_uci).lower(), regex.I | regex.M).groupdict()
-        return res
