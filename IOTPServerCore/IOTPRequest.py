@@ -111,8 +111,6 @@ class IOTPRequest:
                     json_local['status_code'] = 200
                     ret = (201, "Sign In", json_local)
                     pass
-            else:
-                ret = (401, "Unauthorized access")
         elif self.service_type is IOPTServiceType.HTTP:
             pass
 

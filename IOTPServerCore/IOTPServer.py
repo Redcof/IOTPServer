@@ -259,7 +259,7 @@ class IOTPServerCore():
     def handle_iotp(request, incoming_conn, client_data, addr, service_type_txt):
         """initiate the connection for first time."""
         _init_info = request.initiate_connection(client_data)
-        info = {}
+        info = ""
         print "Client{} {} Request Status: {}.".format(addr, service_type_txt, _init_info)
 
         if _init_info[0] is 200:
@@ -274,26 +274,15 @@ class IOTPServerCore():
                 # clear the event
                 IOTPServerCore.event_manager.clear()
                 # get any extra data generate with this event,
-                i = IOTPServerCore.event_manager.get_event_extras().split(',')
-
-                info = json.dumps({
-                    'status_code': i[0],
-                    'message': i[1]
-                })
+                info = IOTPServerCore.event_manager.get_event_extras()
             except:
-                info = json.dumps({
-                    'status_code': 503,
-                    'message': "Slave offline"
-                })
+                info = (503, "Slave offline")
         elif _init_info[0] is 201:
             info = json.dumps(_init_info[2])
         else:
-            info = json.dumps({
-                'status_code': _init_info[0],
-                'message': _init_info[1]
-            })
+            info = _init_info
 
-            """ Send reply to client """
+        """ Send reply to client """
         try:
             incoming_conn.send("{}\n".format(info))
         except socket.error, e:
