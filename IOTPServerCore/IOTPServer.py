@@ -84,12 +84,10 @@ class IOTPServerCore():
         self.req_handler_obj.set_connection(conn)
         self.req_handler_obj.set_ip(addr)
 
-        byte = False
-
         # check the Protocol as well as the type of the client
         if client_data.startswith(IOTProtocols.BYTE):
             self.req_handler_obj.set_type(IOPTServiceType.BYTE)
-            byte = True
+            self.list_of_iotp_slaves.append(conn)
         elif client_data.startswith(IOTProtocols.IOTP):
             self.req_handler_obj.set_type(IOPTServiceType.IOTP)
         elif client_data.startswith(IOTProtocols.HTTP):
@@ -102,11 +100,6 @@ class IOTPServerCore():
         # parse the request
         # initiate the connection for first time.
         b_keep_loop = self.req_handler_obj.initiate_connection(client_data)
-
-        if b_keep_loop is True and byte is True:
-            self.list_of_iotp_slaves.append(conn)
-
-        formatted_data = True
 
         while b_keep_loop:
             b_keep_loop = self.req_handler_obj.keep_conn
