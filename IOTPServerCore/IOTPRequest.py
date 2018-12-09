@@ -13,13 +13,6 @@ class IOPTServiceType:
     IOTP = 2
     HTTP = 3
 
-    class Validation:
-        def __init__(self):
-            pass
-
-        SUCCESS = 200
-
-
 
 class IOTPRequestComponent:
     def __init__(self):
@@ -55,13 +48,9 @@ class IOTPRequest:
     def __init__(self):
         self.service_type = IOPTServiceType.UNKNOWN
         self.keep_conn = False
-        # self.chunk_size = 0
+        self.chunk_size = 0
         self.connection = None
         self.ip = None
-        self.selected_slave_id = None
-        self.operand_id = None
-        self.operand_cmd = None
-        self.query_status = None
         # self.fn_parser = None
         # self.fn_validator = None
         self.SLAVE_LIBRARY = {}
@@ -83,26 +72,25 @@ class IOTPRequest:
             formatted_req = self.fn_request_parser_byte_uci(client_data)
             "validate request"
             ret = self.fn_request_validate_byte(formatted_req)
-            self.connection.send(str(ret)+"\n")
-            if ret == 200:
+            if ret == 0:
+                self.connection.send("200\n")
                 return True
                 # if everything goes fine, store slav information,
                 #  send conformation  byte to slave, as the slave
                 #  has been accepted
-            else:
+            elif ret == 1:
+                self.connection.send("301\n")  # invalid request
+                return False
+            elif ret == -1:
+                self.connection.send("300\n")  # invalid request
                 return False
         elif self.service_type is IOPTServiceType.IOTP:
             " OTP Request Parsing "
             formatted_req = self.fn_request_parser_iotp_uci(client_data)
             " TODO IOTP Request Validation "
             ret = self.fn_request_validate_iotp(formatted_req)
-            if ret is 200:
-                pass
-                # prepare request for IOTP Slave
-                self.fn_prepare_slave_request(formatted_req)
 
             self.connection.send(str(ret) + "\n")
-
         elif self.service_type is IOPTServiceType.HTTP:
             pass
 
@@ -130,19 +118,17 @@ class IOTPRequest:
         self.service_type = service_type
         if self.service_type is IOPTServiceType.BYTE:
             self.keep_conn = True
-            # self.chunk_size = 64
+            self.chunk_size = 64
             # self.fn_parser = self.fn_request_parser_byte_uci
             # self.fn_validator = self.fn_request_validate_byte
 
         elif self.service_type is IOPTServiceType.IOTP:
-            pass
-            # self.chunk_size = 128
+            self.chunk_size = 128
             # self.fn_parser = self.fn_request_parser_iotp_uci
             # self.fn_validator = self.fn_request_validate_iotp
 
         elif self.service_type is IOPTServiceType.HTTP:
-            pass
-            # self.chunk_size = 128
+            self.chunk_size = 128
             # self.fn_parser = self.fn_request_parser_http_get
 
     @staticmethod
@@ -176,7 +162,7 @@ class IOTPRequest:
     # return  1 Duplicate Slave
     # return -1 Invalid Request
     def fn_request_validate_byte(self, formated_req):
-        ret = 200
+        ret = 0
         try:
             # get the slave id information
             slave_id = int(formated_req[ByteRequestComponent.K_SLAVE_ID])
@@ -191,7 +177,7 @@ class IOTPRequest:
                     # check IP address
                     if str(_slav_ip) != str(self.ip[0]):
                         # duplicate slave id
-                        ret = 300
+                        ret = 1
                 else:
                     # new slave
                     dol = formated_req[ByteRequestComponent.K_DIGITAL_LIST].replace('[', '').replace(']', '').split(',')
@@ -202,7 +188,7 @@ class IOTPRequest:
                                                          dol,
                                                          aol)
         except:
-            ret = 503
+            ret = -1
         return ret
 
     # validate a Master App request
@@ -223,18 +209,15 @@ class IOTPRequest:
                 ret = 404  # slave id dose not exists
                 break
 
-            self.selected_slave_id = slave_id
-
             # check digital operand status
             digi_opr_id = formated_req[IOTPRequestComponent.K_DIGITAL_OPERAND_ID]
             if digi_opr_id is not None:
                 if digi_opr_id not in self.SLAVE_LIBRARY[slave_id][3]:
                     ret = 405  # digital operand dose not exists
                     break
-                self.operand_id = digi_opr_id
-                self.operand_cmd = formated_req[IOTPRequestComponent.K_DIGITAL_OPERAND_STATUS]
-                self.query_status = formated_req[IOTPRequestComponent.K_DIGITAL_OPERAND_QUERY]
-                if self.operand_cmd is None and self.query_status is None:
+                opr_cmd = formated_req[IOTPRequestComponent.K_DIGITAL_OPERAND_STATUS]
+                opr_qry = formated_req[IOTPRequestComponent.K_DIGITAL_OPERAND_QUERY]
+                if opr_cmd is None and opr_qry is None:
                     # no query and no command
                     ret = 300  # Invalid request
                     break
@@ -245,23 +228,17 @@ class IOTPRequest:
                 if anlg_opr_id not in self.SLAVE_LIBRARY[slave_id][4]:
                     ret = 405  # analog operand dose not exists
                     break
-                self.operand_id = anlg_opr_id
-                self.operand_cmd = formated_req[IOTPRequestComponent.K_DIGITAL_OPERAND_STATUS]
-                self.query_status = formated_req[IOTPRequestComponent.K_DIGITAL_OPERAND_QUERY]
-                if self.operand_cmd is None and self.query_status is None:
+                opr_cmd = formated_req[IOTPRequestComponent.K_DIGITAL_OPERAND_STATUS]
+                opr_qry = formated_req[IOTPRequestComponent.K_DIGITAL_OPERAND_QUERY]
+                if opr_cmd is None and opr_qry is None:
                     # no query and no command
                     ret = 300  # Invalid request
                     break
 
-            if self.operand_cmd is not None:
-                self.query_status = formated_req[IOTPRequestComponent.K_SLAVE_QUERY]
-                if self.query_status is None and anlg_opr_id is None and digi_opr_id is None:
-                    ret = 300  # invalid request
-                    break
+            slave_qry = formated_req[IOTPRequestComponent.K_SLAVE_QUERY]
+            if slave_qry is None and anlg_opr_id is None and digi_opr_id is None:
+                ret = 300  # invalid request
+                break
 
             break  # while loop break
         return ret
-
-    # function to prepare IOTP Slave Request
-    def fn_prepare_slave_request(self, formatted_req):
-        pass
