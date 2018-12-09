@@ -1,33 +1,31 @@
 from IOTP_CommandLine import IOTPClientRequestHandler as iotp_req_handle
-from IOTPServerCore import IOTPServer as int_serve
+from IOTP_ServerCore import IOTPServer as int_serve
 
 bServer_status = False
 iotp_server = None
 
 
-
 def iotp_help(options=[]):
-    for key, value in cmd_map.iteritems():
+    for key, value in _cmd_map.iteritems():
         print key, ":", value[0]
 
 
-def iotp_start(options=()):
+def iotp_start(options=["107"]):
     global bServer_status
     global iotp_server
-    if bServer_status is False:
+    if bServer_status == False:
+        try:
+            port = options[0].strip()
+            if port == "":
+                port = 107
+        except:
+            port = 107
         print "Starting server..."
-        # initialize request handler class
         iotp_req = iotp_req_handle.IOTPClientRequestHandler()
-        # initialize server object
-        if len(options) == 1:
-            iotp_server = int_serve.IOTPServerCore(iotp_req, int(options[0]))
-        else:
-            iotp_server = int_serve.IOTPServerCore(iotp_req)
-        # start server
-        if iotp_server.start() is True:
-            bServer_status = True
-            print "Server is started"
-
+        iotp_server = int_serve.IOTP_ServerCore(int(port), iotp_req)
+        iotp_server.start()
+        bServer_status = True
+        print "Server is started at " + str(port)
 
     else:
         print "Server already running."
@@ -36,7 +34,7 @@ def iotp_start(options=()):
 def iptp_stop(options=[]):
     global bServer_status
     global iotp_server
-    if bServer_status is True:
+    if bServer_status == True:
         print "Closing server..."
         iotp_server.stop()
         bServer_status = False
@@ -45,19 +43,19 @@ def iptp_stop(options=[]):
 
 def iptp_stat(options=[]):
     global bServer_status
-    if bServer_status is True:
+    if bServer_status == True:
         print "Server is online."
     else:
         print "Server is closed."
 
 
-cmd_map = {
+_cmd_map = {
     "-h": ["""Get all available commands options. 
     [] is for optional parameters.
     <> is for required parameters.    
     """, iotp_help],
-    "start": [""" start[<space>port[<space>localhost]]
-    To start the  IOTP server. Default port is 10700. 
+    "start": [""" start<space>[port]
+    To start the  IOTP server. Default port is 107. 
     It is often require root access to start the server.
               """, iotp_start],
     "stop": [""" stop 

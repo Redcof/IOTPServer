@@ -1,20 +1,10 @@
-
-from IOTPServerCore.IOTPRequest import IOTPRequest, IOTPRequestComponent, IOPTServiceType
-
-_author_ = 'int_soumen'
-_date_ = "27-07-2018"
+from IOTP_ServerCore.IOTPRequest import IOTPRequest, IOPTServiceType
 
 
-class IOTPClientRequestHandler( IOTPRequest):
-    pass
-
+class IOTPClientRequestHandler(IOTPRequest):
     def __init__(self):
         IOTPRequest.__init__(self)
 
-    def callback(self, formatted_data):
-        IOTPRequest.callback(self, formatted_data)
+    def callback(self, connection, client_ip, formatted_data):
         print formatted_data
-
-        if self.service_type is IOPTServiceType.IOTP:
-            pass
-            # check IOTPRequestComponent.SLAVE_QUERY is None, this is a command
+        connection.send("OK\n")
