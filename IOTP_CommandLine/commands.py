@@ -5,6 +5,7 @@ bServer_status = False
 iotp_server = None
 
 
+
 def iotp_help(options=[]):
     for key, value in cmd_map.iteritems():
         print key, ":", value[0]
