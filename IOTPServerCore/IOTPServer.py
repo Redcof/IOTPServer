@@ -1,12 +1,12 @@
 # Python program to implement server side of chat room.
-
-import socket
-from thread import *
-
-from IOTPServerCore.IOTPRequest import IOPTServiceType, IOTPRequest
+from IOTPServerCore.IOTPRequest import IOPTServiceType
 
 _author_ = 'int_soumen'
 _date_ = "27-07-2018"
+
+import socket
+import re as regex
+from thread import *
 
 
 class IOTProtocols:
@@ -20,14 +20,14 @@ class IOTProtocols:
 
 # IOTP server wrapper
 class IOTPServerCore():
-    def __init__(self, reqHandler, port=10700):  # 0 indicates any free port
+    def __init__(self, iotp_req, port = 10700):  # 0 indicates any free port
         self.PORT = port
         self.HOST = "127.0.0.1"
         self.BACK_LOG = 20
         self.server = None
-        self.list_of_iotp_slaves = {}
+        self.list_of_clients = []
         self.DEFAULT_BYTE_READ = 7
-        self.RequestHandler = reqHandler
+        self.req_handler_obj = iotp_req
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))
         self.HOST = s.getsockname()[0]
@@ -59,106 +59,76 @@ class IOTPServerCore():
             # accept a new connection
             conn, addr = self.server.accept()
 
+            # list up the connection information
+            self.list_of_clients.append(conn)
+
             # prints the address of the user that just connected
             # print addr[0] + " connected"
 
             # creates and individual thread for every user
-
-            start_new_thread(self.client_thread, (conn, addr, IOTPRequest()))
+            start_new_thread(self.client_thread, (conn, addr))
 
     def stop(self):
         if self.server is not None:
-            for connection in self.list_of_iotp_slaves:
+            for connection in self.list_of_clients:
                 connection.close()
-                self.list_of_iotp_slaves.remove(connection)
+                self.list_of_clients.remove(connection)
             self.server.close()
 
-    # handle client
-    def client_thread(self, conn, addr, request):
+    def client_thread(self, conn, addr):
         b_keep_loop = True
-        # read client request line
-        client_data = self.fn_client_read_line(conn)
-        print "Client {} connected.".format(addr)
+        # sends a message to the client whose user object is conn
+        request = self.client_read_line(conn)
+        formatted_data = True  # let the calback to be called
 
-        request.set_connection(conn)
-        request.set_ip(addr)
-
-        byte_service = False
-        iotp_service = False
-        http_service = False
-
-        # check the Protocol as well as the type of the client
-        if client_data.startswith(IOTProtocols.BYTE):
-            request.set_type(IOPTServiceType.BYTE)
-            byte_service = True
-            print "Client{} Service Type: IOTP Slave.".format(addr)
-        elif client_data.startswith(IOTProtocols.IOTP):
-            request.set_type(IOPTServiceType.IOTP)
-            iotp_service = True
-            print "Client{} Service Type: IOTP Master.".format(addr)
-        elif client_data.startswith(IOTProtocols.HTTP):
-            request.set_type(IOPTServiceType.HTTP)
-            http_service = True
-            print "Client{} Service Type: HTTP.".format(addr)
-        else:
-            # invalid client
-            conn.close()
-            print "Client {} Closed.".format(addr)
-            return
-
-        # parse the request
-        # initiate the connection for first time.
-        b_keep_loop = request.initiate_connection(client_data)
-
-        if b_keep_loop is 200:
-            print "Client{} Request OK.".format(addr)
-            if iotp_service is True:
-                msg_frame = request.fn_prepare_slave_request(request.formatted_req)
-                print "Client{} Sending Command: {}".format(addr, msg_frame)
-                self.list_of_iotp_slaves[request.selected_slave_id].send(msg_frame+"\n")
-                conn.send("200\n")
-            if byte_service is True:
-                self.list_of_iotp_slaves[request.selected_slave_id] = conn
-                conn.send("200\n")
-        else:
-            conn.send("{}\n".format(b_keep_loop))
-
-        print "Client{} Request Status: {}.".format(addr, b_keep_loop)
-        formatted_data = True
+        if request.startswith(IOTProtocols.BYTE):
+            self.req_handler_obj.set_type(IOPTServiceType.BYTE)
+            formatted_data = True  # let the calback to be called
+        elif request.startswith(IOTProtocols.IOTP):
+            self.req_handler_obj.set_type(IOPTServiceType.IOTP)
+            formatted_data = self.request_parser_iotp_uci(request)
+        elif request.startswith(IOTProtocols.HTTP):
+            self.req_handler_obj.set_type(IOPTServiceType.HTTP)
 
         while b_keep_loop:
-            b_keep_loop = request.keep_conn
+            b_keep_loop = self.req_handler_obj.keep_conn
             try:
                 if formatted_data:
-                    request.callback(formatted_data)
-                    # reads new data
-                    client_data = self.fn_client_read_line(conn)
-                    formatted_data = request.fn_parser_func(client_data)
-                    self.RequestHandler.callback(request, formatted_data)
+                    self.req_handler_obj.callback(conn, addr, formatted_data)
+                    formatted_data = conn.recv(self.req_handler_obj.chunk_size)
                 else:
-                    pass
-                    # TODO Control Loop Break with INTERROGATION message
-                    # message may have no content if the connection closed by client side
-                    # self.remove(conn)
-                    # break
+                    # message may have no content if the connection
+                    #     is broken, in this case we remove the connection"""
+                    self.remove(conn)
+                    break
             except:
                 continue
+        # print addr[0] + "Closed."
 
-        conn.close()
-        print "Client {} Closed.".format(addr)
+    # """Using the below function, we broadcast the message to all
+    # clients who's object is not the same as the one sending
+    # the message """
 
-    # print addr[0] + "Closed."
+    def broadcast(self, message, connection):
+        for clients in self.list_of_clients:
+            if clients != connection:
+                try:
+                    clients.send(message)
+                except:
+                    clients.close()
 
-    # The following function simply removes the object
+                    # if the link is broken, we remove the client
+                    self.remove(clients)
+
+    # """The following function simply removes the object
     # from the list that was created at the beginning of
-    # the program
+    # the program"""
 
     def remove(self, connection):
-        if connection in self.list_of_iotp_slaves:
-            self.list_of_iotp_slaves.remove(connection)
+        if connection in self.list_of_clients:
+            self.list_of_clients.remove(connection)
 
-    @staticmethod
-    def fn_client_read_line(conn):
+    def client_read_line(self, conn):
         string = ""
         while True:
             try:
@@ -170,3 +140,9 @@ class IOTPServerCore():
             except:
                 break
         return string
+
+    def request_parser_iotp_uci(self, request_UCI):
+        res = regex.match(
+            r"iotp://(?P<slv_id>s[0-9]+)((?P<slv_qer>\?)|(/(((?P<anlg_id>a[0-2])?((?P<anlg_qer>\?)|(/(?P<anlg_val>[0-9]{1,4}))))|((?P<digt_id>d[0-7])?((?P<digt_qer>\?)|(/(?P<digt_st>[01])))))))",
+            str(request_UCI).lower(), regex.I | regex.M).groupdict()
+        return res
