@@ -11,9 +11,9 @@ class IOTPClientRequestHandler( IOTPRequest):
     def __init__(self):
         IOTPRequest.__init__(self)
 
-    def callback(self, connection, client_ip, formatted_data):
-        IOTPRequest.callback(self, connection, client_ip, formatted_data)
-        print formatted_data[IOTPRequestComponent.SLAVE_ID]
+    def callback(self, formatted_data):
+        IOTPRequest.callback(self, formatted_data)
+        print formatted_data
 
         if self.service_type is IOPTServiceType.IOTP:
             pass
