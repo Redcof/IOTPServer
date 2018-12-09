@@ -1,0 +1,312 @@
+{
+  "copyright": "copyright (c) S4 Smart Solutions. 2018-2019",
+  "date": "16-09-2018",
+  "author": "int_soumen",
+  "name": "Sunrise View",
+  "id": 101,
+  "username": "ce4d82bf5d688c9e1758fe00f7d5244b",
+  "password": "d241c457b959370b97ba2a2fc6ed6314",
+  "gateway": "192.168.0.1",
+  "slave-group": [
+    {
+      "name": "First Floor",
+      "id": 201,
+      "slaves": [
+        {
+          "name": "Hall",
+          "id": 21,
+          "operands": [
+            {
+              "name": "Main Light 1",
+              "id": 1,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "Main Light 2",
+              "id": 2,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "Fan 1",
+              "id": 3,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "Fan 2",
+              "id": 4,
+              "type": "d",
+              "state": false
+            }
+          ]
+        },
+        {
+          "name": "Bedroom",
+          "id": 22,
+          "operands": [
+            {
+              "name": "Main Light 1",
+              "id": 1,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "AC",
+              "id": 2,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "Room Freshener",
+              "id": 3,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "FAN",
+              "id": 4,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "TV",
+              "id": 5,
+              "type": "d",
+              "state": false
+            }
+          ]
+        },
+        {
+          "name": "Wash Room",
+          "id": 23,
+          "operands": [
+            {
+              "name": "Main Light 1",
+              "id": 1,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "Room Freshener",
+              "id": 2,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "Water Heater",
+              "id": 3,
+              "type": "d",
+              "state": false
+            }
+          ]
+        },
+        {
+          "name": "Garden",
+          "id": 24,
+          "operands": [
+            {
+              "name": "All Lights",
+              "id": 1,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "Watering",
+              "id": 2,
+              "type": "d",
+              "state": false
+            }
+          ]
+        },
+        {
+          "name": "Garage",
+          "id": 25,
+          "operands": [
+            {
+              "name": "All Lights",
+              "id": 1,
+              "type": "d",
+              "state": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Second Floor",
+      "id": 202,
+      "slaves": [
+        {
+          "name": "Mandir",
+          "id": 11,
+          "operands": [
+            {
+              "name": "Main Light 1",
+              "id": 1,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "Main Light 2",
+              "id": 2,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "Night Light",
+              "id": 3,
+              "type": "d",
+              "state": false
+            }
+          ]
+        },
+        {
+          "name": "Hall",
+          "id": 12,
+          "operands": [
+            {
+              "name": "Main Light 1",
+              "id": 1,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "Main Light 2",
+              "id": 2,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "Fan 1",
+              "id": 3,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "Fan 2",
+              "id": 4,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "Music",
+              "id": 5,
+              "type": "d",
+              "state": false
+            }
+          ]
+        },
+        {
+          "name": "Kitchen",
+          "id": 13,
+          "operands": [
+            {
+              "name": "Main Light",
+              "id": 1,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "AC",
+              "id": 2,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "Room Freshener",
+              "id": 3,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "Fridge",
+              "id": 4,
+              "type": "d",
+              "state": false
+            }
+          ]
+        },
+        {
+          "name": "Bedroom",
+          "id": 14,
+          "operands": [
+            {
+              "name": "Main Light 1",
+              "id": 1,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "AC",
+              "id": 2,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "Room Freshener",
+              "id": 3,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "FAN",
+              "id": 4,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "TV",
+              "id": 5,
+              "type": "d",
+              "state": false
+            }
+          ]
+        },
+        {
+          "name": "Wash Room",
+          "id": 15,
+          "operands": [
+            {
+              "name": "Main Light 1",
+              "id": 1,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "Room Freshener",
+              "id": 2,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "Water Heater",
+              "id": 3,
+              "type": "d",
+              "state": false
+            }
+          ]
+        },
+        {
+          "name": "Balcony",
+          "id": 16,
+          "operands": [
+            {
+              "name": "Main Light 1",
+              "id": 1,
+              "type": "d",
+              "state": false
+            },
+            {
+              "name": "Color Lights",
+              "id": 2,
+              "type": "d",
+              "state": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+r"iotp://(s[0-9]+)?((/((d[0-7]((/[0-1])|\?))|(a[0-2]((/[0-9]{1,4})|\?))))|\?)"gisa
+
+
+iotp://(s[0-9]+)(\?|(/(((a[0-2])?(\?|(/[0-9]{1,4})))|((d[0-7])?(\?|(/[01]))))))
+
+
+>>> m = re.match(r"(?P<first_name>\w+) (?P<last_name>\w+)", "Malcolm Reynolds")
+>>> m.group('first_name')
+'Malcolm'
+>>> m.group('last_name')
+'Reynolds'
+
+
+iotp://(?P<slv_id>s[0-9]+)((?P<slv_qer>\?)|(/(((?P<anlg_id>a[0-2])?((?P<anlg_qer>\?)|(/(?P<anlg_val>[0-9]{1,4}))))|((?P<digt_id>d[0-7])?((?P<digt_qer>\?)|(/(?P<digt_st>[01])))))))
+
+
+^(iotp://(?P<slv_id>s[0-9]+)((?P<slv_qer>\?)|(/(((?P<anlg_id>a[0-2])?((?P<anlg_qer>\?)|(/(?P<anlg_val>[0-9]{1,4}))))|((?P<digt_id>d[0-7])?((?P<digt_qer>\?)|(/(?P<digt_st>[01]))))))))$
