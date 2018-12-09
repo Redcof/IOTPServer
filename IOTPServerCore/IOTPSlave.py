@@ -1,5 +1,4 @@
 from IOTPServerCore.utils import log
-
 _author_ = "int_soumen"
 _date_ = "09-21-2018"
 

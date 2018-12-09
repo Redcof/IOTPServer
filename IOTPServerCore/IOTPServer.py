@@ -7,10 +7,17 @@ import datetime
 import time
 
 from IOTPServerCore.IOTPCommon import SLAVE_LIBRARY, SERVER_JSON_CONF, PING_REPLY
-# from IOTPServerCore.IOTPEventManager import IOTPEventManager
 from IOTPServerCore.IOTPRequest import IOPTServiceType, IOTPRequest
 from IOTPServerCore.IOTPSlave import IOTPSlaveInfo
 from IOTPServerCore.utils import log, void
+
+##############################################
+####### CHANGE GPIO MODE TO SIMULATION #######
+##############################################
+# from S4Hw.S4HwInterface import init_gpio, operate_gpio_digital, operate_gpio_analog, get_gpio_status
+from S4Hw.dev_S4HwInterface import init_gpio, operate_gpio_digital, operate_gpio_analog, get_gpio_status
+# LOG_PATH = '/home/pi/s4/iotp-serv-run.log'
+LOG_PATH = '/Users/soumensardar/Downloads/iotp-serv-run.log'
 
 _author_ = 'int_soumen'
 _date_ = "27-07-2018"
@@ -43,7 +50,9 @@ class IOTPServerCore():
         self.DEFAULT_BYTE_READ = 7
         self.RequestHandler = req_handler
         self.server_home = server_home_dir
-
+        init_gpio([[3, 3, 3], [3, 3, 3]], 0)
+        start_new_thread(self.blink, (1,))
+        operate_gpio_digital(3, 1)
         self.server_conf_status = False
         self.init_server_conf()
 
@@ -82,7 +91,8 @@ class IOTPServerCore():
                 slave_list = []
                 # TODO: Loop Each Slave
                 for slave_json_obj in slave_json_arr:
-                    slave_dict = {"name": slave_json_obj['name'], 'id': slave_json_obj['id'], 'image_uri' : slave_json_obj['image_uri']}
+                    slave_dict = {"name": slave_json_obj['name'], 'id': slave_json_obj['id'],
+                                  'image_uri': slave_json_obj['image_uri']}
                     # get all operands
                     operand_json_arr = slave_json_obj["operands"]
                     if not isinstance(operand_json_arr, list):
@@ -122,11 +132,10 @@ class IOTPServerCore():
         j_file.close()
 
     def start(self):
-        log("Preparing TCP Stack...")
-        time.sleep(30)
+        global LOG_PATH
+        operate_gpio_digital(3, 1)
         today = datetime.datetime.now()
-        # file_name = '/home/pi/s4/iotp-serv-run.log'
-        file_name = '/Users/soumensardar/Downloads/iotp-serv-run.log'
+        file_name = LOG_PATH
         # print file_name
         fr = open(file_name, 'a')
         fr.write('-=\n' + str(today) + '\n')
@@ -139,6 +148,9 @@ class IOTPServerCore():
             return False
         if self.server is None:
             # configure the socket for start the IOTP server
+            print "Wait for ETH port to be prepared..."
+            time.sleep(30)
+            print "ETH.OK"
 
             # bind socket with IP and PORT
             try:
@@ -161,6 +173,7 @@ class IOTPServerCore():
                 start_new_thread(self.s_listen, ())
                 file.write('OK.RUNNING\n')
                 file.close()
+                operate_gpio_digital(3, 0)
                 return True
             except socket.error, e:
                 print e
@@ -174,6 +187,21 @@ class IOTPServerCore():
             file.close()
             return False
 
+    def blink(self, closing_sts):
+        operate_gpio_digital(3, 1)
+        time.sleep(.1)
+        operate_gpio_digital(3, 0)
+        time.sleep(.1)
+        operate_gpio_digital(3, 1)
+        time.sleep(.1)
+        operate_gpio_digital(3, 0)
+        time.sleep(.1)
+        operate_gpio_digital(3, 1)
+        time.sleep(.1)
+        operate_gpio_digital(3, 0)
+        time.sleep(.1)
+        operate_gpio_digital(3, closing_sts)
+
     def s_listen(self):
         # listen for new incoming connection
         self.server.listen(self.BACK_LOG)
@@ -183,6 +211,7 @@ class IOTPServerCore():
             conn, addr = self.server.accept()
 
             # start a thread with client request
+            start_new_thread(self.blink, (0,))
             start_new_thread(self.client_thread, (conn, addr, IOTPRequest()))
 
     def stop(self):
@@ -191,6 +220,7 @@ class IOTPServerCore():
                 k.socket.close()
             SLAVE_LIBRARY.clear()
             self.server.close()
+            operate_gpio_digital(3, 1)
 
     # handle client in a thread
     def client_thread(self, incoming_conn, addr, request):
@@ -309,8 +339,8 @@ class IOTPServerCore():
             except:
                 info = json.dumps({
                     'status_code': 503,
-                    'status_text': 'Server Error',
-                    'message': 'Server error'
+                    'status_text': 'Slave offline',
+                    'message': 'Slave offline'
                 })
         elif iotp_request_uci[0] is 201:
             info = json.dumps(iotp_request_uci[2])
