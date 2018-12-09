@@ -5,19 +5,23 @@ import socket
 from thread import *
 import datetime
 import time
+import os
 
 from IOTPServerCore.IOTPCommon import SLAVE_LIBRARY, SERVER_JSON_CONF, PING_REPLY
 from IOTPServerCore.IOTPRequest import IOPTServiceType, IOTPRequest
 from IOTPServerCore.IOTPSlave import IOTPSlaveInfo
-from IOTPServerCore.utils import log, void
+from IOTPServerCore.utils import log
 
-##############################################
-####### CHANGE GPIO MODE TO SIMULATION #######
-##############################################
-# from S4Hw.S4HwInterface import init_gpio, operate_gpio_digital, operate_gpio_analog, get_gpio_status
-from S4Hw.dev_S4HwInterface import init_gpio, operate_gpio_digital, operate_gpio_analog, get_gpio_status
-# LOG_PATH = '/home/pi/s4/iotp-serv-run.log'
-LOG_PATH = '/Users/soumensardar/Downloads/iotp-serv-run.log'
+if os.path.exists("/home/pi"):
+    from S4Hw.S4HwInterface import init_gpio, operate_gpio_digital
+
+    LOG_PATH = '/home/pi/s4/iotp-serv-run.log'
+    SLEEP_WAIT = 20
+else:
+    from S4Hw.dev_S4HwInterface import init_gpio, operate_gpio_digital
+
+    LOG_PATH = '/Users/soumensardar/Downloads/iotp-serv-run.log'
+    SLEEP_WAIT = 1
 
 _author_ = 'int_soumen'
 _date_ = "27-07-2018"
@@ -133,6 +137,7 @@ class IOTPServerCore():
 
     def start(self):
         global LOG_PATH
+        global SLEEP_WAIT
         operate_gpio_digital(3, 1)
         today = datetime.datetime.now()
         file_name = LOG_PATH
@@ -149,7 +154,7 @@ class IOTPServerCore():
         if self.server is None:
             # configure the socket for start the IOTP server
             print "Wait for ETH port to be prepared..."
-            time.sleep(30)
+            time.sleep(SLEEP_WAIT)
             print "ETH.OK"
 
             # bind socket with IP and PORT

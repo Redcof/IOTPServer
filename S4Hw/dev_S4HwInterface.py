@@ -25,6 +25,7 @@ def operate_gpio_digital(gpio, operation):
 # operate GPIO pins in PWM
 def operate_gpio_analog(gpio, operation):
     VIRTUAL_GPIO[gpio] = operation
+    print "\a"
     pass
 
 
