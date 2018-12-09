@@ -18,7 +18,6 @@ class IOPTServiceType:
     BYTE = 1
     IOTP = 2
     HTTP = 3
-    PING = 4
 
     class Validation:
         def __init__(self):
@@ -86,8 +85,6 @@ class IOTPRequest:
         elif self.service_type is IOPTServiceType.IOTP:
             # " IOTP Request Parsing "
             formatted_req = self.fn_master_request_parser_iotp_uci(client_data)
-            if formatted_req['slv_qer'] is not None:
-                self.query_status = True
             # "Request auth"
             auth = IOTPSecureService(
                 SERVER_JSON_CONF["username"],
@@ -301,9 +298,4 @@ class IOTPRequest:
                                                                      int(self.operand_id[1:]),
                                                                      self.operand_cmd
                                                                      )
-        else:
-            # this is a interrogation
-            header_frame = self.fn_create_slave_req_header(IOTPSlaveMessage.RequestType.INTERROGATION,
-                                                           self.selected_slave_id)
-            frame = header_frame + "{:01X}".format(0xD)
-        return frame
+            return frame

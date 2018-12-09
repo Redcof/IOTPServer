@@ -39,6 +39,12 @@
               "id": 4,
               "type": "d",
               "state": false
+            },
+            {
+              "name": "Music",
+              "id": 5,
+              "type": "d",
+              "state": false
             }
           ]
         },

@@ -4,8 +4,8 @@ import json
 import socket
 from thread import *
 
-from IOTPServerCore.IOTPCommon import SLAVE_LIBRARY, SERVER_JSON_CONF, PING_REPLY
-# from IOTPServerCore.IOTPEventManager import IOTPEventManager
+from IOTPServerCore.IOTPCommon import SLAVE_LIBRARY, SERVER_JSON_CONF
+from IOTPServerCore.IOTPEventManager import IOTPEventManager
 from IOTPServerCore.IOTPRequest import IOPTServiceType, IOTPRequest
 from IOTPServerCore.IOTPSlave import IOTPSlaveInfo
 from IOTPServerCore.utils import log, void
@@ -21,7 +21,6 @@ class IOTProtocols:
     BYTE = "byte://"  # byte://
     IOTP = "iotp://"  # iotp://s1/d1/1
     HTTP = "GET"  # GET /s5/d2/1 HTTP 1.1
-    PING = "ping"  # GET /s5/d2/1 HTTP 1.1
 
 
 # IOTP server wrapper
@@ -29,9 +28,9 @@ class IOTPServerCore():
     SIG_SLAVE_RESPONSE_RECEIVED = 0x00000001
     SIG_SLAVE_RESPONSE_TIMEOUT = 0x00000002
 
-    # event_manager = IOTPEventManager((
-    #     SIG_SLAVE_RESPONSE_RECEIVED,
-    # ))
+    event_manager = IOTPEventManager((
+        SIG_SLAVE_RESPONSE_RECEIVED,
+    ))
 
     def __init__(self, req_handler, server_home_dir, port=10700):  # 0 indicates any free port
         self.PORT = port
@@ -112,6 +111,8 @@ class IOTPServerCore():
             SERVER_JSON_CONF['slave-group'] = slave_group_list
 
             self.server_conf_status = True
+
+            print SERVER_JSON_CONF
         except KeyError, e:
             # clear all configuration as there is an error
             log(e)
@@ -164,13 +165,16 @@ class IOTPServerCore():
         initial_information = True
         # read client request line
         client_data = self.fn_client_read_line(incoming_conn)
-        if client_data is None:
-            incoming_conn.close()
-            return
 
-        print "Client connected {} with {} .".format(addr, client_data)
+        print "Client {} connected.".format(addr)
         request.set_connection(incoming_conn)
         request.set_ip(addr)
+
+        # byte_service = False
+        # iotp_service = False
+        # http_service = False
+
+        # service_type_txt = ""
 
         # check the Protocol as well as the type of the client
         if client_data.startswith(IOTProtocols.BYTE):
@@ -193,13 +197,6 @@ class IOTPServerCore():
             service_type_txt = "HTTP"
             print "Client{} Service Type: HTTP.".format(addr)
             self.handle_http(request, incoming_conn, client_data, addr, service_type_txt)
-        elif client_data.startswith(IOTProtocols.PING):
-            request.set_type(IOPTServiceType.PING)
-            # http_service = True
-            service_type_txt = "PING"
-            print "Client{} Service Type: PING.".format(addr)
-            self.handle_ping(incoming_conn, client_data)
-
         else:
             # invalid client
             incoming_conn.close()
@@ -207,108 +204,108 @@ class IOTPServerCore():
             # return as not a valid client
             return
 
-    # """ Keep connection and handle byte slave """
-    # def hold_byte_slave(self, request, incoming_conn):
-    #     formatted_data = True
-    #     req_sts = request.keep_conn
-    #
-    #     while req_sts:
-    #         try:
-    #             if formatted_data:
-    #                 # reads new data
-    #                 client_data = self.fn_client_read_line(incoming_conn)
-    #                 if client_data is None:
-    #                     # slave offline
-    #                     break
-    #                 if client_data != "":
-    #                     """ Signal Event as response has been received """
-    #                     IOTPServerCore.event_manager.signal_event(IOTPServerCore.SIG_SLAVE_RESPONSE_RECEIVED,
-    #                                                               client_data)
-    #                     # TODO process client data if require
-    #             else:
-    #                 pass
-    #                 # TODO Control Loop Break with INTERROGATION message
-    #                 # message may have no content if the connection closed by client side
-    #                 # self.remove(conn)
-    #                 # break
-    #         except RuntimeError, e:
-    #             print e.message
-    #             continue
+    """ Keep connection and handle byte slave """
 
-    def handle_byte(self, request, slave_socket, slave_request, addr, service_type_txt):
+    def hold_byte_slave(self, request, incoming_conn):
+        formatted_data = True
+        req_sts = request.keep_conn
+
+        while req_sts:
+            try:
+                if formatted_data:
+                    # reads new data
+                    client_data = self.fn_client_read_line(incoming_conn)
+                    if client_data is None:
+                        # slave offline
+                        break
+                    if client_data != "":
+                        """ Signal Event as response has been received """
+                        IOTPServerCore.event_manager.signal_event(IOTPServerCore.SIG_SLAVE_RESPONSE_RECEIVED,
+                                                                  client_data)
+                        # TODO process client data if require
+                else:
+                    pass
+                    # TODO Control Loop Break with INTERROGATION message
+                    # message may have no content if the connection closed by client side
+                    # self.remove(conn)
+                    # break
+            except:
+                continue
+
+    def handle_byte(self, request, incoming_conn, client_data, addr, service_type_txt):
         # validate and init connection with slave
-        byte_request_uci = request.initiate_connection(slave_request)
+        _init_info = request.initiate_connection(client_data)
 
-        print "Client{} {} Request Status: {}.".format(addr, service_type_txt, byte_request_uci)
+        print "Client{} {} Request Status: {}.".format(addr, service_type_txt, _init_info)
 
         """ Send reply to byte slave """
         try:
-            slave_socket.send("[{},{}]\n".format(byte_request_uci[0], byte_request_uci[1]))
+            incoming_conn.send("[{},{}]\n".format(_init_info[0], _init_info[1]))
         except socket.error, e:
             log(e)
-        except RuntimeError, e:
-            print e.message
+            return
 
-    def handle_iotp(self, iotp_request, app_socket, app_request, addr, service_type_txt):
+        """ Handle Byte Slaves """
+        if _init_info[0] is 200:
+            pass
+            self.hold_byte_slave(request, incoming_conn)
+        try:
+            incoming_conn.close()
+        except:
+            pass
+        print "Byte Slave Closed: {}.".format(addr)
+
+    @staticmethod
+    def handle_iotp(request, incoming_conn, client_data, addr, service_type_txt):
         """initiate the connection for first time."""
-        iotp_request_uci = iotp_request.initiate_connection(app_request)
+        _init_info = request.initiate_connection(client_data)
         info = {}
-        print "Client{} {} Request Status: {}.".format(addr, service_type_txt, iotp_request_uci)
+        print "Client{} {} Request Status: {}.".format(addr, service_type_txt, _init_info)
 
-        if iotp_request_uci[0] is 200:
+        if _init_info[0] is 200:
             print "Client{} {} Request OK.".format(addr, service_type_txt)
-            msg_frame = iotp_request.fn_prepare_slave_request()
+            msg_frame = request.fn_prepare_slave_request()
             # print "Client{} {} Sending Command: {}".format(addr, msg_frame, service_type_txt)
             " Sending Request To IOTP Slave "
             try:
-                slave_obj = SLAVE_LIBRARY[iotp_request.selected_slave_id]
-                # send request to slave
-                slave_obj.socket.send(msg_frame + "\n")
-                # receive response from slave
-                info = self.fn_client_read_line(slave_obj.socket)
-                # # " waiting for slave to response "
-                # IOTPServerCore.event_manager.event_wait(IOTPServerCore.SIG_SLAVE_RESPONSE_RECEIVED)
-                # # clear the event
-                # IOTPServerCore.event_manager.clear()
-                # # get any extra data generate with this event,
-                # i = IOTPServerCore.event_manager.get_event_extras()
-                # info = i
-            except RuntimeError, e:
+                SLAVE_LIBRARY[request.selected_slave_id].socket.send(msg_frame + "\n")
+                # " waiting for slave to response "
+                IOTPServerCore.event_manager.event_wait(IOTPServerCore.SIG_SLAVE_RESPONSE_RECEIVED)
+                # clear the event
+                IOTPServerCore.event_manager.clear()
+                # get any extra data generate with this event,
+                i = IOTPServerCore.event_manager.get_event_extras().split(',')
+
+                info = json.dumps({
+                    'status_code': i[0],
+                    'message': i[1]
+                })
+            except:
                 info = json.dumps({
                     'status_code': 503,
-                    'status_text': 'Server Error',
-                    'message': e.message
+                    'message': "Slave offline"
                 })
-        elif iotp_request_uci[0] is 201:
-            info = json.dumps(iotp_request_uci[2])
+        elif _init_info[0] is 201:
+            info = json.dumps(_init_info[2])
         else:
             info = json.dumps({
-                'status_code': iotp_request_uci[0],
-                'message': iotp_request_uci[1]
+                'status_code': _init_info[0],
+                'message': _init_info[1]
             })
 
             """ Send reply to client """
         try:
-            print "TX: {}\\n".format(info)
-            app_socket.send("{}\n".format(info))
+            incoming_conn.send("{}\n".format(info))
         except socket.error, e:
             log(e)
         try:
-            app_socket.close()
+            incoming_conn.close()
         except:
             pass
         print "IOTP Client Closed: {}.".format(addr)
 
     def handle_http(self, request, incoming_conn, client_data, addr, service_type_txt):
         pass
-
-    @staticmethod
-    def handle_ping(incoming_conn, client_data):
-        try:
-            incoming_conn.send("{},{}\n".format(PING_REPLY, client_data))
-            incoming_conn.close()
-        except:
-            pass
 
     @staticmethod
     def fn_client_read_line(conn):
