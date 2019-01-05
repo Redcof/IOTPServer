@@ -211,12 +211,12 @@ class IOTPRequest:
                     _slave_info.close_connection()
 
                 # set the address and connection socket
-                _slave_info.set_socket(self.address, self.connection)
+                _slave_info.save(self.address, self.connection)
             else:
                 # slave id not found
                 ret = (300, "Invalid Request")
-        except:
-            ret = (503, "Server Error")
+        except Exception, e:
+            ret = (503, e.message)
             pass
         return ret
 

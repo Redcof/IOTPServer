@@ -1,4 +1,5 @@
-from IOTPServerCore.utils import log
+from IntsUtil.util import log
+
 _author_ = "int_soumen"
 _date_ = "09-21-2018"
 
@@ -6,7 +7,7 @@ _date_ = "09-21-2018"
 class IOTPSlaveInfo:
     def __init__(self, slave_id, do_list, ao_list, addr=("0.0.0.0", 0), socket=0):
         self.slave_id = slave_id
-        self.set_address = addr
+        self.address = addr
         self.socket = socket
         self.DO_Count = len(do_list)
         self.AO_Count = len(ao_list)
@@ -19,15 +20,16 @@ class IOTPSlaveInfo:
             # close previous connection if any
             try:
                 self.socket.close()
-            except:
+            except Exception, e:
+                print  e
                 pass
-            log(self.set_address, "Connection closed")
+            log("{} Connection closed".format(self.address))
             self.socket = 0
-            self.set_address = ("0.0.0.0", 0)
+            self.address = ("0.0.0.0", 0)
 
-    def set_socket(self, addr, sock):
+    def save(self, addr, sock):
         if self.socket is 0:
-            self.set_address = addr
+            self.address = addr
             self.socket = sock
         else:
             raise RuntimeError("Socket already available")
