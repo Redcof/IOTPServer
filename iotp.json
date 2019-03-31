@@ -3,9 +3,10 @@
   "date": "03-Jan-2019",
   "author": "int_soumen",
   "name": "Singh Residency",
-  "id": 101,
-  "username": "ce4d82bf5d688c9e1758fe00f7d5244b",
-  "password": "d241c457b959370b97ba2a2fc6ed6314",
+  "id":101,
+  "master-id": "0001-S24-72-WBIN",
+  "username": "TkdWbU9XRTVOR1ZtT1dFNU1UVnphWEl1YzNWeWIycHBkRGc1TWpsallURmk1TVRWemFYSQ==",
+  "password": "TkdWbU9XRTVOR1ZtT1dFNU1UVXhNak0wTlRZNE9USTVZMkV4WWc9PTVNVFV4TWpN",
   "gateway": "192.168.0.1",
   "slave-group": [
     {

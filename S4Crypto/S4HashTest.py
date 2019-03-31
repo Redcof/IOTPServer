@@ -1,5 +1,16 @@
-from S4Crypto.S4Hash import s4hash
+from S4Crypto.S4Hash import s4hash, decode
 
-print "ce4d82bf5d688c9e1758fe00f7d5244b" == s4hash("sir.surojit")
-print "d241c457b959370b97ba2a2fc6ed6314" == s4hash("123456")
-print "Token: " + s4hash(s4hash("sir.surojit") + s4hash("123456"))
+# d = s4hash("sir.surojit")
+# print d + " -- username"
+# d = s4hash("123456")
+# print d + " -- password"
+# print decode(d)
+
+print s4hash("sir.surojit")
+print s4hash("123456")
+
+#    ((5Tx) / 100) + x = 3x
+# => ((5Tx) / 100) = 2x
+# => 5Tx = 200x
+# => T = 200 / 5
+# => T = 40 Y

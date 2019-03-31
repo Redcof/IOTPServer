@@ -3,7 +3,7 @@ import json
 import re as regex
 
 from IOTPServerCore.IOTPCommon import SERVER_JSON_CONF, SLAVE_LIBRARY
-from IOTPServerCore.IOTPSecurity import IOTPSecureService, TOKEN, SIGN_IN
+from IOTPServerCore.IOTPSecurity import IOTPSecureService, TOKEN_BASED_COMM, SIGN_IN
 from IOTPServerCore.IOTPSlaveMessage import fn_get_trans_id, IOTPSlaveMessage
 
 __author_ = "int_soumen"
@@ -83,7 +83,8 @@ class IOTPRequest:
             formatted_req = self.fn_slave_request_parser_byte_uci(client_data)
             # " Byte Request Validation "
             ret = self.fn_slave_request_validate_byte(formatted_req)
-        elif self.service_type is IOPTServiceType.IOTP:
+        elif self.service_type is IOPTServiceType.IOTP \
+                or self.service_type is IOPTServiceType.HTTP:
             # " IOTP Request Parsing "
             formatted_req = self.fn_master_request_parser_iotp_uci(client_data)
             if formatted_req['slv_qer'] is not None:
@@ -99,8 +100,8 @@ class IOTPRequest:
 
             if tok is not None:
                 # " IOTP Request Validation "
-                if auth.type is TOKEN:
-                    ret = self.fn_master_request_validate_iotp(formatted_req)
+                if auth.type is TOKEN_BASED_COMM:
+                    ret = self.fn_master_request_validate_iotp_slave(formatted_req)
                 elif auth.type is SIGN_IN:
                     json_local = copy.deepcopy(SERVER_JSON_CONF)
                     # delete less important keys
@@ -116,9 +117,6 @@ class IOTPRequest:
                     pass
             else:
                 ret = (401, "Unauthorized access")
-        elif self.service_type is IOPTServiceType.HTTP:
-            pass
-
         return ret
 
     def callback(self, formatted_data):
@@ -153,7 +151,7 @@ class IOTPRequest:
             pass
             # self.chunk_size = 128
             # self.fn_parser = self.fn_request_parser_iotp_uci
-            # self.fn_validator = self.fn_master_request_validate_iotp
+            # self.fn_validator = self.fn_master_request_validate_iotp_slave
 
         elif self.service_type is IOPTServiceType.HTTP:
             pass
@@ -163,8 +161,8 @@ class IOTPRequest:
     @staticmethod
     def fn_master_request_parser_iotp_uci(request_uci):
         res = regex.match(
-            r"^iotp://((?P<signin>sign/(?P<username>[^/]*)/(?P<password>[^/]*))|((tok/(?P<token>[0-9a-f]{32}))/(?P<slv_id>s[0-9]+)((?P<slv_qer>\?)|(/(((?P<anlg_id>a[1-7])?((?P<anlg_qer>\?)|(/(?P<anlg_val>[0-9]{1,4}))))|((?P<digt_id>d[1-7])?((?P<digt_qer>\?)|(/(?P<digt_st>[01])))))))))$",
-            str(request_uci).lower(), regex.I | regex.M)
+            r"^iotp://((?P<signin>sign/(?P<username>[^/]*)/(?P<password>[^/]*))|((tok/(?P<token>[0-9A-z\=]{1,}))/(?P<slv_id>s[0-9]+)((?P<slv_qer>\?)|(/(((?P<anlg_id>a[1-7])?((?P<anlg_qer>\?)|(/(?P<anlg_val>[0-9]{1,4}))))|((?P<digt_id>d[1-7])?((?P<digt_qer>\?)|(/(?P<digt_st>[01])))))))))$",
+            str(request_uci), regex.I | regex.M)
         if res:
             res = res.groupdict()
         return res
@@ -174,14 +172,14 @@ class IOTPRequest:
         request_url = ""
         res = regex.match(
             r"^http://(?P<slv_id>s[0-9]+)((?P<slv_qer>\?)|(/(((?P<anlg_id>a[0-2])?((?P<anlg_qer>\?)|(/(?P<anlg_val>[0-9]{1,4}))))|((?P<digt_id>d[0-7])?((?P<digt_qer>\?)|(/(?P<digt_st>[01])))))))$",
-            str(request_url).lower(), regex.I | regex.M).groupdict()
+            str(request_url), regex.I | regex.M).groupdict()
         return res
 
     @staticmethod
     def fn_slave_request_parser_byte_uci(request_uci):
         res = regex.match(
             r"^byte://(?P<sid>[0-9]{1,2})/d:(?P<doc>[0-8])(?P<dol>\[(d[1-8](,d[1-8]){0,7}|)\])/a:(?P<aoc>[012])(?P<aol>\[(a[1-8](,a[1-8]){0,1}|)\])$",
-            str(request_uci).lower(), regex.I | regex.M)
+            str(request_uci), regex.I | regex.M)
         if res:
             res = res.groupdict()
         return res
@@ -221,7 +219,7 @@ class IOTPRequest:
         return ret
 
     # validate a Master App request
-    def fn_master_request_validate_iotp(self, formated_req):
+    def fn_master_request_validate_iotp_slave(self, formated_req):
         ret = (200, "OK")  # success
         # validate IOTP request mandatory fields
         while True:

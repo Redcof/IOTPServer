@@ -4,7 +4,7 @@ _author_ = "int_soumen"
 _date_ = "09-17-2018"
 
 SIGN_IN = 1
-TOKEN = 2
+TOKEN_BASED_COMM = 2
 
 
 class IOTPSecureService:
@@ -31,14 +31,14 @@ class IOTPSecureService:
                 token = self.formatted_req["token"]
                 token_h = s4hash(self.conf_username_h + self.conf_password_h)
                 if token is not None:
-                    # TODO validate token
+                    #  validate token
                     if token_h != token:
                         # token not matched
                         break
-                    self.type = TOKEN
+                    self.type = TOKEN_BASED_COMM
                 else:
                     # check request type
-                    # TODO validate username & password
+                    #  validate username & password
                     username = self.formatted_req["username"]
                     password = self.formatted_req["password"]
                     try:
@@ -48,7 +48,7 @@ class IOTPSecureService:
                             # invalid username or password
                             break
                         self.type = SIGN_IN
-                    except:
+                    except Exception, e:
                         # something wrong in username/password
                         break
             status = True
