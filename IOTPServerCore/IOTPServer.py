@@ -16,14 +16,12 @@ from IntsUtil.util import log, log_error
 if os.path.exists("/home/pi"):
     from S4Hw.S4HwInterface import init_gpio, operate_gpio_digital
 
-    LOG_PATH = '/home/pi/s4/iotp-serv-run.log'
     CLOUD_HOST = "www.zodarica.com"
     URL_PREFIX = "/api"
-    SLEEP_WAIT = 20
+    SLEEP_WAIT = 10
 else:
     from S4Hw.dev_S4HwInterface import init_gpio, operate_gpio_digital
 
-    LOG_PATH = '/Users/soumensardar/Downloads/iotp-serv-run.log'
     # CLOUD_HOST = "localhost"
     # URL_PREFIX = "/zodarica/api"
     CLOUD_HOST = "www.zodarica.com"
@@ -34,7 +32,7 @@ OPR_WAIT_SEC = 1
 
 _author_ = 'int_soumen'
 _date_ = "27-07-2018"
-_mod_ = "03-01-2019"
+_mod_ = "31-03-2019"
 
 
 class IOTProtocols:
@@ -51,6 +49,9 @@ class IOTProtocols:
 class IOTPServerCore():
 
     def __init__(self, req_handler, server_home_dir, port=10700):  # 0 indicates any free port
+        global SLEEP_WAIT
+        time.sleep(SLEEP_WAIT)
+
         self.PORT = port
         self.HOST = ""
         self.BACK_LOG = 20
@@ -75,11 +76,15 @@ class IOTPServerCore():
                 log_error(e.message)
 
     def init_server_conf(self):
-        log("CONF IN PROGRESS...")
-        dir_path = self.server_home
-        j_file = open(dir_path + '/iotp.json')
-        JSON = json.load(j_file, "ASCII")
+        log("CONF IN PROGRESS...", False)
         try:
+            json_path = self.server_home + '/iotp.json'
+            log("Opening configuration JSON @ " + json_path, False)
+            j_file = open(json_path)
+            JSON = json.load(j_file, "ASCII")
+
+            log(JSON)
+
             keys = ('copyright', 'date', 'author', 'name', 'master-id', 'id', 'username', 'password', 'gateway')
             for k in keys:
                 SERVER_JSON_CONF[k] = copy.copy(JSON[k])
@@ -90,7 +95,10 @@ class IOTPServerCore():
 
             slave_group_list = []
             # Loop Each Slave Group
+            debug_ctr1 = 0
             for group_json_obj in slave_group_json_arr:
+                debug_ctr1 += 1
+                log(debug_ctr1)
                 group_dict = {"name": group_json_obj['name'], 'id': group_json_obj['id']}
 
                 # get all slaves
@@ -99,7 +107,10 @@ class IOTPServerCore():
                     raise KeyError
                 slave_list = []
                 # Loop Each Slave
+                debug_ctr2 = 0
                 for slave_json_obj in slave_json_arr:
+                    debug_ctr2 += 1
+                    log(str(debug_ctr1) + "," + str(debug_ctr2))
                     slave_dict = {"name": slave_json_obj['name'], 'id': slave_json_obj['id'],
                                   'image_uri': slave_json_obj['image_uri']}
                     # get all operands
@@ -111,7 +122,10 @@ class IOTPServerCore():
                     do_list = []
                     ao_list = []
                     # Loop Each Slave Operand
+                    debug_ctr3 = 0
                     for operand_json_obj in operand_json_arr:
+                        debug_ctr3 += 1
+                        log(str(debug_ctr1) + "," + str(debug_ctr2) + "," + str(debug_ctr3))
                         operand_dict = {"name": operand_json_obj['name'], 'id': operand_json_obj['id'],
                                         'state': operand_json_obj['state']}
                         operand_list.append(operand_dict)
@@ -127,23 +141,20 @@ class IOTPServerCore():
                                                                              ao_list)
                 group_dict['slaves'] = slave_list
                 slave_group_list.append(group_dict)
-
                 # Slave count check
-
             SERVER_JSON_CONF['slave-group'] = slave_group_list
-
             self.server_conf_status = True
+            j_file.close()
         except KeyError, e:
             # clear all configuration as there is an error
             log_error(e.message)
             SLAVE_LIBRARY.clear()
             self.server_conf_status = False
-        j_file.close()
 
     def start(self):
-        global LOG_PATH
-        global SLEEP_WAIT
         operate_gpio_digital(3, 1)
+
+        log("Try starting...", False)
 
         if self.server_conf_status is False:
             log("CONF FAIL.", False)
@@ -151,10 +162,6 @@ class IOTPServerCore():
         if self.server is None:
             log("CONF OK.", False)
             # configure the socket for start the IOTP server
-            log("INIT ETH...")
-            time.sleep(SLEEP_WAIT)
-            log("ETH OK")
-
             # bind socket with IP and PORT
             try:
                 log("Server IP " + self.HOST)
@@ -172,7 +179,9 @@ class IOTPServerCore():
 
                 # start listing to the incoming connection
                 start_new_thread(self.socket_listener, ())
+
                 log('SERVER OK.RUNNING.', False)
+
                 operate_gpio_digital(3, 0)
 
                 """ START Thread FOR CLOUD SERVICE """

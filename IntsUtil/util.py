@@ -4,12 +4,14 @@ import datetime
 import traceback
 import sys
 
-home_dir = server_home = os.path.dirname(os.path.realpath(__file__))[:-9]
+HOME_DIR = SERVER_HOME = os.path.dirname(os.path.realpath(__file__))[:-9]
 
 if os.path.exists("/home/pi"):
-    LOG_PATH = '/home/pi/s4/iotp-serv-run.log'
+    LOG_PATH = '/home/pi/s4/IOTPServer/iotp-serv-run.log'
+    HOME_DIR = '/home/pi/s4/IOTPServer'
+    SERVER_HOME = HOME_DIR
 else:
-    LOG_PATH = home_dir + '/iotp-serv-run.log'
+    LOG_PATH = HOME_DIR + '/iotp-serv-run.log'
 
 RED = "\033[1;31m"
 BLUE = "\033[1;34m"
@@ -26,7 +28,7 @@ def log(string, print_only=True):
     if fp is not None and not print_only:
         ts = time.time()
         st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-        string = st + ":[m]: " + string
+        string = st + ":[m]: " + str(string)
         fp.write(string + "\n")
         fp.close()
     print string

@@ -1,5 +1,6 @@
 from IOTP_CommandLine import IOTPClientRequestHandler as iotp_req_handle
 from IOTPServerCore import IOTPServer as int_serve
+from IntsUtil.util import log
 
 bServer_status = False
 iotp_server = None
@@ -14,7 +15,7 @@ def iotp_start(server_home, options=()):
     global bServer_status
     global iotp_server
     if bServer_status is False:
-        print "Starting server..."
+        log("Starting server...", False)
         # initialize request handler class
         iotp_req = iotp_req_handle.IOTPClientRequestHandler()
         # initialize server object
@@ -23,13 +24,14 @@ def iotp_start(server_home, options=()):
         else:
             iotp_server = int_serve.IOTPServerCore(iotp_req, server_home)
         # start server
-        if iotp_server.start() is True:
+        s = iotp_server.start()
+        if s is True:
             bServer_status = True
-            print "Server is started"
+            log( "Server is started", False)
         else:
             return False
     else:
-        print "Server already running."
+        log( "Server already running.", False)
     return True
 
 
@@ -37,18 +39,18 @@ def iptp_stop(options=()):
     global bServer_status
     global iotp_server
     if bServer_status is True:
-        print "Closing server..."
+        log( "Closing server...", False)
         iotp_server.stop()
         bServer_status = False
-        print "Server is closed."
+        log( "Server is closed.", False)
 
 
 def iptp_stat(options=()):
     global bServer_status
     if bServer_status is True:
-        print "Server is online."
+        log( "Server is online.", False)
     else:
-        print "Server is closed."
+        log( "Server is closed.", False)
 
 
 cmd_map = {
