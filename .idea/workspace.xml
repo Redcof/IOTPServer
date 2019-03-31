@@ -3,16 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="9caa8fd2-0895-42f2-96ed-af084e1eab38" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Apartment.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/IOTPServerCore/IOTPCommon.py" beforeDir="false" afterPath="$PROJECT_DIR$/IOTPServerCore/IOTPCommon.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/IOTPServerCore/IOTPRequest.py" beforeDir="false" afterPath="$PROJECT_DIR$/IOTPServerCore/IOTPRequest.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/IOTPServerCore/IOTPSecurity.py" beforeDir="false" afterPath="$PROJECT_DIR$/IOTPServerCore/IOTPSecurity.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/IOTPServerCore/IOTPServer.py" beforeDir="false" afterPath="$PROJECT_DIR$/IOTPServerCore/IOTPServer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/S4Crypto/S4Hash.py" beforeDir="false" afterPath="$PROJECT_DIR$/S4Crypto/S4Hash.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/S4Crypto/S4HashTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/S4Crypto/S4HashTest.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/iotp-serv-run.log" beforeDir="false" afterPath="$PROJECT_DIR$/iotp-serv-run.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/iotp.json" beforeDir="false" afterPath="$PROJECT_DIR$/iotp.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/IntsUtil/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/IntsUtil/util.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -26,7 +18,7 @@
         <counts>
           <entry key="project.closed" value="25" />
           <entry key="project.open.time.0" value="2" />
-          <entry key="project.open.time.1" value="6" />
+          <entry key="project.open.time.1" value="7" />
           <entry key="project.open.time.10" value="1" />
           <entry key="project.open.time.12" value="1" />
           <entry key="project.open.time.15" value="2" />
@@ -38,14 +30,14 @@
           <entry key="project.open.time.7" value="1" />
           <entry key="project.open.time.8" value="6" />
           <entry key="project.open.time.9" value="1" />
-          <entry key="project.opened" value="25" />
+          <entry key="project.opened" value="26" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="dummy" value="53" />
           <entry key="json" value="35" />
-          <entry key="py" value="4543" />
+          <entry key="py" value="4650" />
           <entry key="txt" value="10" />
         </counts>
       </usages-collector>
@@ -53,7 +45,7 @@
         <counts>
           <entry key="JSON" value="35" />
           <entry key="PLAIN_TEXT" value="63" />
-          <entry key="Python" value="4543" />
+          <entry key="Python" value="4650" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
@@ -76,23 +68,26 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/IOTPServerCore/IOTPServer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="220">
-              <caret line="32" column="16" selection-start-line="32" selection-start-column="16" selection-end-line="32" selection-end-column="16" />
+            <state relative-caret-position="9880">
+              <caret line="532" column="32" lean-forward="true" selection-start-line="532" selection-start-column="32" selection-end-line="532" selection-end-column="32" />
               <folding>
-                <element signature="e#14892#17228#0" />
+                <element signature="e#56#67#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/IntsUtil/util.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="190">
-              <caret line="12" column="14" selection-start-line="12" selection-start-column="14" selection-end-line="12" selection-end-column="14" />
+            <state relative-caret-position="462">
+              <caret line="39" column="22" lean-forward="true" selection-start-line="39" selection-start-column="22" selection-end-line="39" selection-end-column="22" />
+              <folding>
+                <element signature="e#0#9#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -100,7 +95,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/IOTPServerCore/IOTPRequest.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1254">
+            <state relative-caret-position="719">
               <caret line="72" column="30" selection-start-line="72" selection-start-column="30" selection-end-line="72" selection-end-column="30" />
             </state>
           </provider>
@@ -118,17 +113,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/S4Crypto/S4Hash.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="380">
-              <caret line="22" column="4" selection-start-line="22" selection-start-column="4" selection-end-line="22" selection-end-column="4" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/iotp.json">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="190">
-              <caret line="10" column="18" selection-start-line="10" selection-start-column="18" selection-end-line="10" selection-end-column="18" />
+            <state relative-caret-position="285">
+              <caret line="17" column="29" selection-start-line="17" selection-start-column="29" selection-end-line="17" selection-end-column="29" />
             </state>
           </provider>
         </entry>
@@ -144,6 +130,7 @@
       <find>RESPONSE</find>
       <find>lower</find>
       <find>response.read()</find>
+      <find>log(</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -159,13 +146,14 @@
         <option value="$PROJECT_DIR$/IOTPServerCore/IOTPCommon.py" />
         <option value="$PROJECT_DIR$/iotp.json" />
         <option value="$PROJECT_DIR$/IOTPServerCore/IOTPRequest.py" />
+        <option value="$PROJECT_DIR$/IntsUtil/util.py" />
         <option value="$PROJECT_DIR$/IOTPServerCore/IOTPServer.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
     <option name="y" value="23" />
-    <option name="width" value="1440" />
+    <option name="width" value="1741" />
     <option name="height" value="827" />
   </component>
   <component name="ProjectView">
@@ -317,9 +305,10 @@
     </history-entry>
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1440" height="827" extended-state="0" />
+    <frame x="0" y="23" width="1741" height="827" extended-state="0" />
+    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.16701902" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.1377907" />
       <window_info id="Structure" order="1" weight="0.25" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.3286517" />
@@ -476,17 +465,27 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/IOTPServerCore/IOTPRequest.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1254">
-          <caret line="72" column="30" selection-start-line="72" selection-start-column="30" selection-end-line="72" selection-end-column="30" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///usr/local/Cellar/python@2/2.7.15_1/Frameworks/Python.framework/Versions/2.7/lib/python2.7/re.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2242">
           <caret line="120" selection-start-line="120" selection-end-line="120" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/iotp-serv-run.log">
+      <provider selected="true" editor-type-id="LogFileEditorProvider">
+        <state relative-caret-position="-4063">
+          <caret line="423" column="35" selection-start-line="423" selection-start-column="35" selection-end-line="423" selection-end-column="35" />
+        </state>
+      </provider>
+      <provider editor-type-id="text-editor">
+        <state relative-caret-position="-2638" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/IOTPServerCore/IOTPRequest.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="719">
+          <caret line="72" column="30" selection-start-line="72" selection-start-column="30" selection-end-line="72" selection-end-column="30" />
         </state>
       </provider>
     </entry>
@@ -497,13 +496,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/S4Crypto/S4Hash.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="380">
-          <caret line="22" column="4" selection-start-line="22" selection-start-column="4" selection-end-line="22" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/iotp.json">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="190">
@@ -511,29 +503,29 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/iotp-serv-run.log">
-      <provider editor-type-id="text-editor">
-        <state relative-caret-position="-2638" />
-      </provider>
-      <provider selected="true" editor-type-id="LogFileEditorProvider">
-        <state relative-caret-position="-4063">
-          <caret line="423" column="35" selection-start-line="423" selection-start-column="35" selection-end-line="423" selection-end-column="35" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/IntsUtil/util.py">
+    <entry file="file://$PROJECT_DIR$/S4Crypto/S4Hash.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="190">
-          <caret line="12" column="14" selection-start-line="12" selection-start-column="14" selection-end-line="12" selection-end-column="14" />
+        <state relative-caret-position="285">
+          <caret line="17" column="29" selection-start-line="17" selection-start-column="29" selection-end-line="17" selection-end-column="29" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/IOTPServerCore/IOTPServer.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="220">
-          <caret line="32" column="16" selection-start-line="32" selection-start-column="16" selection-end-line="32" selection-end-column="16" />
+        <state relative-caret-position="9880">
+          <caret line="532" column="32" lean-forward="true" selection-start-line="532" selection-start-column="32" selection-end-line="532" selection-end-column="32" />
           <folding>
-            <element signature="e#14892#17228#0" />
+            <element signature="e#56#67#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/IntsUtil/util.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="462">
+          <caret line="39" column="22" lean-forward="true" selection-start-line="39" selection-start-column="22" selection-end-line="39" selection-end-column="22" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
           </folding>
         </state>
       </provider>

@@ -11,7 +11,7 @@ from IOTPServerCore.IOTPCommon import SLAVE_LIBRARY, SERVER_JSON_CONF, PING_REPL
     HTTP_NOT_FOUND, HTTP_UNAUTHORIZED, HTTP_SERVER_ERROR, HTTP_OK
 from IOTPServerCore.IOTPRequest import IOPTServiceType, IOTPRequest
 from IOTPServerCore.IOTPSlave import IOTPSlaveInfo
-from IntsUtil.util import log
+from IntsUtil.util import log, log_error
 
 if os.path.exists("/home/pi"):
     from S4Hw.S4HwInterface import init_gpio, operate_gpio_digital
@@ -70,9 +70,9 @@ class IOTPServerCore():
                 s.connect((SERVER_JSON_CONF['gateway'], 80))
                 self.HOST = s.getsockname()[0]
             except socket.error, e:
-                log(e.message)
+                log_error(e.message)
             except KeyError, e:
-                log(e.message)
+                log_error(e.message)
 
     def init_server_conf(self):
         log("CONF IN PROGRESS...")
@@ -135,7 +135,7 @@ class IOTPServerCore():
             self.server_conf_status = True
         except KeyError, e:
             # clear all configuration as there is an error
-            log(e.message)
+            log_error(e.message)
             SLAVE_LIBRARY.clear()
             self.server_conf_status = False
         j_file.close()
@@ -146,10 +146,10 @@ class IOTPServerCore():
         operate_gpio_digital(3, 1)
 
         if self.server_conf_status is False:
-            log("CONF FAIL.")
+            log("CONF FAIL.", False)
             return False
         if self.server is None:
-            log("CONF OK.")
+            log("CONF OK.", False)
             # configure the socket for start the IOTP server
             log("INIT ETH...")
             time.sleep(SLEEP_WAIT)
@@ -159,7 +159,7 @@ class IOTPServerCore():
             try:
                 log("Server IP " + self.HOST)
                 log("Server PORT " + str(self.PORT))
-                log("Creating server...")
+                log("Creating server...", False)
                 while True:
                     try:
                         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -172,7 +172,7 @@ class IOTPServerCore():
 
                 # start listing to the incoming connection
                 start_new_thread(self.socket_listener, ())
-                log('OK.RUNNING.')
+                log('SERVER OK.RUNNING.', False)
                 operate_gpio_digital(3, 0)
 
                 """ START Thread FOR CLOUD SERVICE """
@@ -276,7 +276,7 @@ class IOTPServerCore():
             app_socket.close()
         except Exception, e:
             print e
-            log(e.message)
+            log_error(e.message)
             pass
 
     def handle_http(self, http_request, http_data):
@@ -427,7 +427,6 @@ class IOTPServerCore():
                             # get the last command
                             last_cmd = cmd_list[command_count - 1]
                             log("Executing CMD...")
-                            # TODO step 4: execute command
                             req = IOTPRequest()
                             req.set_type(IOPTServiceType.HTTP)
                             response_json_string = self.handle_http(req, last_cmd['command'])
@@ -473,7 +472,7 @@ class IOTPServerCore():
                 pass
             conn.close()
         except Exception, e:
-            log(e.message)
+            log_error(e.message)
             if conn is not None:
                 conn.close()
             pass
@@ -504,7 +503,7 @@ class IOTPServerCore():
                 status = HTTP_UNAUTHORIZED
             conn.close()
         except Exception, e:
-            log(e.message)
+            log_error(e.message)
             if conn is not None:
                 conn.close()
             pass
@@ -531,7 +530,7 @@ class IOTPServerCore():
             # print response.read()
             conn.close()
         except Exception, e:
-            log(e.message)
+            log_error(e.message)
             if conn is not None:
                 conn.close()
             pass
