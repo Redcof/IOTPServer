@@ -53,3 +53,13 @@ def print_red(e):
     print e
     sys.stdout.write(RESET)
     pass
+
+
+def is_numeric(o):
+    type_ = type(o).__name__
+    # print type_
+    if type_ == 'int' or type_ == 'float' or type_ == 'long':
+        return True
+    else:
+        return False
+    pass

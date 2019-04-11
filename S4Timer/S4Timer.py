@@ -28,13 +28,13 @@ class S4Timer:
         self.en_ThState = S4Timer.STATE_ACTIVE
         self.TimeStartTime = time.time()
 
-    """ start timer """
+    """ blink timer """
 
     def start_timer(self):
         self.en_ThState = S4Timer.STATE_ACTIVE
         self.TimeStartTime = time.time()
 
-    """ stop timer """
+    """ stop_blink timer """
 
     def stop_timer(self):
         self.en_ThState = S4Timer.STATE_EXPIRED

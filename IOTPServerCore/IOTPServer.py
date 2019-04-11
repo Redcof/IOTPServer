@@ -12,6 +12,7 @@ from IOTPServerCore.IOTPCommon import SLAVE_LIBRARY, SERVER_JSON_CONF, PING_REPL
 from IOTPServerCore.IOTPRequest import IOPTServiceType, IOTPRequest
 from IOTPServerCore.IOTPSlave import IOTPSlaveInfo
 from IntsUtil.util import log, log_error
+from S4Hw.S4Blink import S4LED
 
 if os.path.exists("/home/pi"):
     from S4Hw.S4HwInterface import init_gpio, operate_gpio_digital
@@ -51,7 +52,6 @@ class IOTPServerCore():
     def __init__(self, req_handler, server_home_dir, port=10700):  # 0 indicates any free port
         global SLEEP_WAIT
         time.sleep(SLEEP_WAIT)
-
         self.PORT = port
         self.HOST = ""
         self.BACK_LOG = 20
@@ -59,9 +59,8 @@ class IOTPServerCore():
         self.DEFAULT_BYTE_READ = 7
         self.RequestHandler = req_handler
         self.server_home = server_home_dir
-        init_gpio(3, 'O', 0)
-        start_new_thread(self.blink, (1,))
-        operate_gpio_digital(3, 1)
+        self.StatusLED = S4LED(gpio=3)
+        self.StatusLED.blink()
         self.server_conf_status = False
         self.init_server_conf()
 
@@ -152,7 +151,6 @@ class IOTPServerCore():
             self.server_conf_status = False
 
     def start(self):
-        operate_gpio_digital(3, 1)
 
         log("Try starting...", False)
 
@@ -161,7 +159,7 @@ class IOTPServerCore():
             return False
         if self.server is None:
             log("CONF OK.", False)
-            # configure the socket for start the IOTP server
+            # configure the socket for blink the IOTP server
             # bind socket with IP and PORT
             try:
                 log("Server IP " + self.HOST)
@@ -177,12 +175,12 @@ class IOTPServerCore():
                         print e
                         time.sleep(1)
 
-                # start listing to the incoming connection
+                # blink listing to the incoming connection
                 start_new_thread(self.socket_listener, ())
 
                 log('SERVER OK.RUNNING.', False)
 
-                operate_gpio_digital(3, 0)
+                self.StatusLED.stop_blink(0)
 
                 """ START Thread FOR CLOUD SERVICE """
                 start_new_thread(self.start_cloud_service, ())
@@ -203,7 +201,7 @@ class IOTPServerCore():
             # accept a new connection
             conn, addr = self.server.accept()
 
-            # start a thread with client request
+            # blink a thread with client request
             start_new_thread(self.blink, (0,))
             start_new_thread(self.client_thread, (conn, addr, IOTPRequest()))
 
@@ -213,7 +211,7 @@ class IOTPServerCore():
             #     k.socket.close()
             SLAVE_LIBRARY.clear()
             self.server.close()
-            operate_gpio_digital(3, 1)
+            self.StatusLED.blink()
 
     # handle client in a thread
     def client_thread(self, incoming_conn, addr, request):
@@ -365,19 +363,12 @@ class IOTPServerCore():
         return string
 
     def blink(self, closing_sts):
-        operate_gpio_digital(3, 1)
-        time.sleep(.1)
-        operate_gpio_digital(3, 0)
-        time.sleep(.1)
-        operate_gpio_digital(3, 1)
-        time.sleep(.1)
-        operate_gpio_digital(3, 0)
-        time.sleep(.1)
-        operate_gpio_digital(3, 1)
-        time.sleep(.1)
-        operate_gpio_digital(3, 0)
-        time.sleep(.1)
-        operate_gpio_digital(3, closing_sts)
+        conf = self.StatusLED.get_conf()
+        self.StatusLED.blink(mode="fast", retention="short")
+        time.sleep(1)
+        self.StatusLED.stop_blink(closing_sts)
+        self.StatusLED.set_conf(conf)
+        pass
 
     # TODO: Cloud Web Client
     def start_cloud_service(self):
@@ -401,8 +392,9 @@ class IOTPServerCore():
                     continue
                 log("Login OK")
 
+                log("Waiting for CMDs...")
+                self.StatusLED.blink(mode="lazy", retention="tiny")
                 while True:
-                    log("Waiting for CMDs...")
                     # step 2: if session available else login
                     # step 3: read for command
                     cmd_list = self.read_pending_cloud_cmd(token)
@@ -410,6 +402,7 @@ class IOTPServerCore():
                         log("oops! session expired.")
                         break
                     if cmd_list is not False:
+                        self.blink(0)
                         # get the command count
                         command_count = len(cmd_list)
                         # get the latest command & ignore other commands
@@ -443,12 +436,13 @@ class IOTPServerCore():
                             log("Updating CMD to ACK_EXE...")
                             status = self.update_pending_cloud_cmd_status(last_cmd['cmd_time'], token,
                                                                           response_json_string)
+
                             if status == HTTP_UNAUTHORIZED:
                                 log("oops! session expired.")
                                 break
-                        time.sleep(2)
                     time.sleep(OPR_WAIT_SEC)
                     pass  # cmd fetch & exe loop
+                self.StatusLED.stop_blink(0)
             except Exception, e:
                 pass  # any exception
             time.sleep(OPR_WAIT_SEC)
