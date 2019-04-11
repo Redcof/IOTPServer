@@ -60,7 +60,7 @@ class IOTPServerCore():
         self.RequestHandler = req_handler
         self.server_home = server_home_dir
         self.StatusLED = S4LED(gpio=3)
-        self.StatusLED.blink()
+        self.StatusLED.on()
         self.server_conf_status = False
         self.init_server_conf()
 
@@ -82,7 +82,7 @@ class IOTPServerCore():
             j_file = open(json_path)
             JSON = json.load(j_file, "ASCII")
 
-            log(JSON)
+            # log(JSON)
 
             keys = ('copyright', 'date', 'author', 'name', 'master-id', 'id', 'username', 'password', 'gateway')
             for k in keys:
@@ -159,7 +159,7 @@ class IOTPServerCore():
             return False
         if self.server is None:
             log("CONF OK.", False)
-            # configure the socket for blink the IOTP server
+            # configure the socket for blink_once the IOTP server
             # bind socket with IP and PORT
             try:
                 log("Server IP " + self.HOST)
@@ -175,12 +175,13 @@ class IOTPServerCore():
                         print e
                         time.sleep(1)
 
-                # blink listing to the incoming connection
+                # blink_once listing to the incoming connection
+                self.StatusLED.blink(closing_value=0)
                 start_new_thread(self.socket_listener, ())
 
                 log('SERVER OK.RUNNING.', False)
 
-                self.StatusLED.stop_blink(0)
+                # self.StatusLED.stop_blink(0)
 
                 """ START Thread FOR CLOUD SERVICE """
                 start_new_thread(self.start_cloud_service, ())
@@ -201,9 +202,12 @@ class IOTPServerCore():
             # accept a new connection
             conn, addr = self.server.accept()
 
-            # blink a thread with client request
-            start_new_thread(self.blink, (0,))
+            # blink_once a thread with client request
+            # start_new_thread(self.blink_once, (0,))
             start_new_thread(self.client_thread, (conn, addr, IOTPRequest()))
+            self.StatusLED.on()
+            time.sleep(0.1)
+            self.StatusLED.off()
 
     def stop(self):
         if self.server is not None:
@@ -362,12 +366,12 @@ class IOTPServerCore():
                 break
         return string
 
-    def blink(self, closing_sts):
-        conf = self.StatusLED.get_conf()
-        self.StatusLED.blink(mode="fast", retention="short")
-        time.sleep(1)
-        self.StatusLED.stop_blink(closing_sts)
-        self.StatusLED.set_conf(conf)
+    def blink_once(self, closing_sts):
+        # conf = self.StatusLED.get_conf()
+        self.StatusLED.blink(mode="fast", retention="short", closing_value=closing_sts)
+        # time.sleep(1)
+        # self.StatusLED.stop_blink(closing_sts)
+        # self.StatusLED.set_conf(conf)
         pass
 
     # TODO: Cloud Web Client
@@ -383,6 +387,7 @@ class IOTPServerCore():
         # Always send a "User-Agent": "IOTP" header in request
         # the username and password would be found in iotp.json file
         while True:
+            self.StatusLED.blink(mode="fast", retention="short", closing_value=0)
             try:
                 log("Cloud Signing...")
                 token = self.cloud_signing()
@@ -393,7 +398,6 @@ class IOTPServerCore():
                 log("Login OK")
 
                 log("Waiting for CMDs...")
-                self.StatusLED.blink(mode="lazy", retention="tiny")
                 while True:
                     # step 2: if session available else login
                     # step 3: read for command
@@ -402,7 +406,9 @@ class IOTPServerCore():
                         log("oops! session expired.")
                         break
                     if cmd_list is not False:
-                        self.blink(0)
+                        self.StatusLED.on()
+                        time.sleep(0.1)
+                        self.StatusLED.off()
                         # get the command count
                         command_count = len(cmd_list)
                         # get the latest command & ignore other commands
@@ -442,13 +448,14 @@ class IOTPServerCore():
                                 break
                     time.sleep(OPR_WAIT_SEC)
                     pass  # cmd fetch & exe loop
-                self.StatusLED.stop_blink(0)
+                # self.StatusLED.stop_blink(0)
             except Exception, e:
                 pass  # any exception
             time.sleep(OPR_WAIT_SEC)
         pass  # main login loop
 
-    def prepare_url(self, route):
+    @staticmethod
+    def prepare_url(route):
         return URL_PREFIX + "/" + route + "/"
         pass
 

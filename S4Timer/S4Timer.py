@@ -28,7 +28,7 @@ class S4Timer:
         self.en_ThState = S4Timer.STATE_ACTIVE
         self.TimeStartTime = time.time()
 
-    """ blink timer """
+    """ blink_once timer """
 
     def start_timer(self):
         self.en_ThState = S4Timer.STATE_ACTIVE

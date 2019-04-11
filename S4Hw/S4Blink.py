@@ -20,37 +20,33 @@ class S4LED:
         self.blinking_status = False
         self.blinking_delay_sec = 0.5
         self.led_retention_sec = 0.5
-        self.operation_status = False
+        # self.operation_status = False
         self.closing_value = 0
-        self.thread_status = False
-        self.blink_level_ctr = 0
-        self.recover()
+        # self.thread_status = False
+        # self.blink_level_ctr = 0
+        # self.recover()
         pass
 
     def operate(self):
-        while self.thread_status is True:
-            while self.operation_status is True:
-                operate_gpio_digital(self.gpio, 1)
-                time.sleep(self.led_retention_sec)
-                operate_gpio_digital(self.gpio, 0)
-                time.sleep(self.blinking_delay_sec)
-                pass
-            operate_gpio_digital(self.gpio, self.closing_value)
+        for i in range(0, 3, 1):
+            operate_gpio_digital(self.gpio, 1)
+            time.sleep(self.led_retention_sec)
+            operate_gpio_digital(self.gpio, 0)
+            time.sleep(self.blinking_delay_sec)
             pass
-            time.sleep(0.01)
-        pass
+        operate_gpio_digital(self.gpio, self.closing_value)
 
-    def get_conf(self):
-        return self.blinking_delay_sec, self.led_retention_sec
-        pass
+    # def get_conf(self):
+    #     return self.blinking_delay_sec, self.led_retention_sec
+    #     pass
+    #
+    # def set_conf(self, conf):
+    #     self.blinking_delay_sec = conf[0]
+    #     self.led_retention_sec = conf[1]
+    #     pass
 
-    def set_conf(self, conf):
-        self.blinking_delay_sec = conf[0]
-        self.led_retention_sec = conf[1]
-        pass
-
-    def blink(self, mode="normal", retention="normal"):
-        self.blink_level_ctr = self.blink_level_ctr + 1
+    def blink(self, mode="normal", retention="normal", closing_value=0):
+        # self.blink_level_ctr = self.blink_level_ctr + 1
 
         if is_numeric(mode):
             self.blinking_delay_sec = mode
@@ -78,27 +74,30 @@ class S4LED:
         else:
             self.led_retention_sec = 0.5  # 500 msec
 
-        self.operation_status = True
-        pass
-
-    def stop_blink(self, closing_value=0):
-        self.blink_level_ctr = self.blink_level_ctr - 1
+        # self.operation_status = True
         self.closing_value = closing_value
-        if self.blink_level_ctr == 0:
-            self.operation_status = False
-        else:
-            operate_gpio_digital(self.gpio, self.closing_value)
+
+        start_new_thread(self.operate, ())
         pass
 
-    def kill(self):
-        self.thread_status = False
-        pass
-
-    def recover(self):
-        if self.thread_status is False:
-            self.thread_status = True
-            start_new_thread(self.operate, ())
-        pass
+    # def stop_blink(self, closing_value=0):
+    #     # self.blink_level_ctr = self.blink_level_ctr - 1
+    #     self.closing_value = closing_value
+    #     if self.blink_level_ctr == 0:
+    #         self.operation_status = False
+    #     else:
+    #         operate_gpio_digital(self.gpio, self.closing_value)
+    #     pass
+    #
+    # def kill(self):
+    #     # self.thread_status = False
+    #     pass
+    #
+    # def recover(self):
+    #     # if self.thread_status is False:
+    #     #     self.thread_status = True
+    #     #     start_new_thread(self.operate, ())
+    #     pass
 
     def on(self):
         operate_gpio_digital(self.gpio, 1)

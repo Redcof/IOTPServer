@@ -23,7 +23,7 @@ def iotp_start(server_home, options=()):
             iotp_server = int_serve.IOTPServerCore(iotp_req, server_home, int(options[0]))
         else:
             iotp_server = int_serve.IOTPServerCore(iotp_req, server_home)
-        # blink server
+        # blink_once server
         s = iotp_server.start()
         if s is True:
             bServer_status = True
@@ -40,8 +40,8 @@ def iptp_stop(options=()):
     global iotp_server
     if bServer_status is True:
         log( "Closing server...", False)
-        iotp_server.stop_blink()
         bServer_status = False
+        iotp_server.StatusLED.on()
         log( "Server is closed.", False)
 
 
@@ -58,9 +58,9 @@ cmd_map = {
     [] is for optional parameters.
     <> is for required parameters.    
     """, iotp_help],
-    "blink": [""" blink[<space>port[<space>localhost]]
-    To blink the  IOTP server. Default port is 10700. 
-    It is often require root access to blink the server.
+    "blink_once": [""" blink_once[<space>port[<space>localhost]]
+    To blink_once the  IOTP server. Default port is 10700. 
+    It is often require root access to blink_once the server.
               """, iotp_start],
     "stop_blink": [""" stop_blink 
     To stop_blink the IOTP server""", iptp_stop],
