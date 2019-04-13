@@ -8,7 +8,7 @@ _author_ = "int_soumen"
 _date_ = "2019-JAN-03"
 
 if __name__ == "__main__":
-    _version_ = "2.4.11"
+    _version_ = "2.5.11"
     log("Welcome to IOTP server version " + _version_, False)
 
     try:

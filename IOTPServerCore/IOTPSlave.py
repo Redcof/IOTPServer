@@ -23,7 +23,7 @@ class IOTPSlaveInfo:
             except Exception, e:
                 print  e
                 pass
-            log("{} Connection closed".format(self.address))
+            # log("{} Connection closed".format(self.address))
             self.socket = 0
             self.address = ("0.0.0.0", 0)
 

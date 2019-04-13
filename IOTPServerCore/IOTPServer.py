@@ -78,7 +78,7 @@ class IOTPServerCore():
         log("CONF IN PROGRESS...", False)
         try:
             json_path = self.server_home + '/iotp.json'
-            log("Opening configuration JSON @ " + json_path, False)
+            # log("Opening configuration JSON @ " + json_path, False)
             j_file = open(json_path)
             JSON = json.load(j_file, "ASCII")
 
@@ -94,10 +94,10 @@ class IOTPServerCore():
 
             slave_group_list = []
             # Loop Each Slave Group
-            debug_ctr1 = 0
+            # debug_ctr1 = 0
             for group_json_obj in slave_group_json_arr:
-                debug_ctr1 += 1
-                log(debug_ctr1)
+                # debug_ctr1 += 1
+                # log(debug_ctr1)
                 group_dict = {"name": group_json_obj['name'], 'id': group_json_obj['id']}
 
                 # get all slaves
@@ -106,10 +106,10 @@ class IOTPServerCore():
                     raise KeyError
                 slave_list = []
                 # Loop Each Slave
-                debug_ctr2 = 0
+                # debug_ctr2 = 0
                 for slave_json_obj in slave_json_arr:
-                    debug_ctr2 += 1
-                    log(str(debug_ctr1) + "," + str(debug_ctr2))
+                    # debug_ctr2 += 1
+                    # log(str(debug_ctr1) + "," + str(debug_ctr2))
                     slave_dict = {"name": slave_json_obj['name'], 'id': slave_json_obj['id'],
                                   'image_uri': slave_json_obj['image_uri']}
                     # get all operands
@@ -121,10 +121,10 @@ class IOTPServerCore():
                     do_list = []
                     ao_list = []
                     # Loop Each Slave Operand
-                    debug_ctr3 = 0
+                    # debug_ctr3 = 0
                     for operand_json_obj in operand_json_arr:
-                        debug_ctr3 += 1
-                        log(str(debug_ctr1) + "," + str(debug_ctr2) + "," + str(debug_ctr3))
+                        # debug_ctr3 += 1
+                        # log(str(debug_ctr1) + "," + str(debug_ctr2) + "," + str(debug_ctr3))
                         operand_dict = {"name": operand_json_obj['name'], 'id': operand_json_obj['id'],
                                         'state': operand_json_obj['state']}
                         operand_list.append(operand_dict)
@@ -151,9 +151,7 @@ class IOTPServerCore():
             self.server_conf_status = False
 
     def start(self):
-
-        log("Try starting...", False)
-
+        # log("Try starting...", False)
         if self.server_conf_status is False:
             log("CONF FAIL.", False)
             return False
@@ -163,7 +161,7 @@ class IOTPServerCore():
             # bind socket with IP and PORT
             try:
                 log("Server IP " + self.HOST)
-                log("Server PORT " + str(self.PORT))
+                # log("Server PORT " + str(self.PORT))
                 log("Creating server...", False)
                 while True:
                     try:
@@ -172,6 +170,7 @@ class IOTPServerCore():
                         self.server.bind((self.HOST, self.PORT))
                         break
                     except socket.error, e:
+                        log_error(e)
                         print e
                         time.sleep(1)
 
@@ -187,8 +186,8 @@ class IOTPServerCore():
                 start_new_thread(self.start_cloud_service, ())
                 return True
             except socket.error, e:
+                log_error(e)
                 print e
-                log("PORT BLOCKED")
                 return False
         else:
             log("SOCKET FAIL.")
@@ -229,60 +228,64 @@ class IOTPServerCore():
 
         # check the Protocol as well as the type of the client
         if client_data.startswith(IOTProtocols.BYTE):
+            """ Byte Service (Slave -> Server) """
             request.set_type(IOPTServiceType.BYTE)
             # byte_service = True
-
-            log("CLIENT [BYTE] IP:{} | REQUEST << {}".format(addr, client_data))
-
-            self.handle_byte(request, incoming_conn, client_data, addr)
+            # log("CLIENT [BYTE] IP:{} | REQUEST << {}".format(addr, client_data))
+            self.handle_byte_incoming(request, incoming_conn, client_data, addr)
+            pass
         elif client_data.startswith(IOTProtocols.IOTP):
             request.set_type(IOPTServiceType.IOTP)
+            """ IOTP Service (App -> Server) """
             # iotp_service = True
-
-            log("CLIENT [IOTP] IP:{} | REQUEST << {}".format(addr, client_data))
-
-            self.handle_iotp(request, incoming_conn, client_data, addr)
+            # log("CLIENT [IOTP] IP:{} | REQUEST << {}".format(addr, client_data))
+            self.handle_iotp_incoming(request, incoming_conn, client_data, addr)
+            pass
         elif client_data.startswith(IOTProtocols.HTTP):
             # no use
             pass
         elif client_data.startswith(IOTProtocols.PING):
             request.set_type(IOPTServiceType.PING)
+            """ PING Service (Master -> Server) """
             # http_service = True
-
-            log("CLIENT [PING] IP:{} | REQUEST << {}".format(addr, client_data))
-
-            self.handle_ping(incoming_conn, addr, client_data)
+            # log("CLIENT [PING] IP:{} | REQUEST << {}".format(addr, client_data))
+            self.handle_ping_incoming(incoming_conn, addr, client_data)
+            pass
         else:
             # invalid client
             incoming_conn.close()
-            log("CLIENT CONNECTED [INVALID PROTOCOL] IP:{}".format(addr))
+            # log("CLIENT CONNECTED [INVALID PROTOCOL] IP:{}".format(addr))
             return
 
-    def handle_byte(self, request, slave_socket, slave_request, addr):
+    def handle_byte_incoming(self, request, slave_socket, slave_request, addr):
         # validate and init connection with slave
         byte_request_uci = request.initiate_connection(slave_request)
-
         """ Send reply to byte slave """
         try:
             response = "[{},{}]\n".format(byte_request_uci[0], byte_request_uci[1])
             slave_socket.send(response)
-            log("CLIENT [BYTE] IP:{} | RESPONSE OK >> {}".format(addr, response))
+            # log("CLIENT [BYTE] IP:{} | RESPONSE OK >> {}".format(addr, response))
         except socket.error, e:
+            log_error(e)
             print e
-            log("CLIENT [BYTE] IP:{} | RESPONSE ERROR - {}".format(addr, e.message))
+            # log("CLIENT [BYTE] IP:{} | RESPONSE ERROR - {}".format(addr, e.message))
         except RuntimeError, e:
+            log_error(e)
             print e
-            log("CLIENT [BYTE] IP:{} | RESPONSE ERROR - {}".format(addr, e.message))
+            # log("CLIENT [BYTE] IP:{} | RESPONSE ERROR - {}".format(addr, e.message))
 
-    def handle_iotp(self, iotp_request, app_socket, app_data, addr):
+    def handle_iotp_incoming(self, iotp_request, app_socket, app_data, addr):
         # comm. with slave
         response_json_string = self.comm_with_slave(iotp_request, app_data)
         try:
-            log("CLIENT [IOTP] IP:{} | RESPONSE OK >> {}".format(addr, response_json_string))
+            # log("CLIENT [IOTP] IP:{} | RESPONSE OK >> {}".format(addr, response_json_string))
+            # response to App
             app_socket.send("{}\n".format(response_json_string))
+            log("App IP:{} | RESPONSE - {}".format(addr, response_json_string))
         except socket.error, e:
             print e
-            log("CLIENT [IOTP] IP:{} | RESPONSE ERROR - {}".format(addr, e.message))
+            log("App IP:{} | RESPONSE ERROR - {}".format(addr, e.message))
+            log_error(e)
         try:
             app_socket.close()
         except Exception, e:
@@ -302,23 +305,25 @@ class IOTPServerCore():
         """ communicate with stave """
         if iotp_request_uci[0] is 200:
             msg_frame = iotp_request.fn_prepare_slave_request()
-            " Sending Request To IOTP Slave "
+            # """ Sending Request To IOTP Slave """
             try:
                 slave_obj = SLAVE_LIBRARY[iotp_request.selected_slave_id]
-
-                # send request to slave
-                slave_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                slave_sock.setblocking(True)
-                slave_sock.connect((slave_obj.address[0], 10701))
-                slave_sock.sendall(msg_frame + "\n")
-
-                log("CLIENT [IOTP] | REQUEST SLAVE IP:{} DATA >> {}".format(slave_obj.socket, msg_frame))
-
-                info = self.fn_client_read_line(slave_sock)
-                slave_sock.close()
-                log("CLIENT [IOTP] | RESPONSE SLAVE IP:{} DATA << {}".format(slave_obj.socket, info))
+                #  check if slave available or not
+                if slave_obj.address[0] != '0.0.0.0':
+                    # send request to slave
+                    slave_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    slave_sock.setblocking(True)
+                    slave_sock.connect((slave_obj.address[0], 10701))
+                    slave_sock.sendall(msg_frame + "\n")
+                    log("SLAVE IP:{} CMD >> {}".format(slave_obj.socket, msg_frame))
+                    info = self.fn_client_read_line(slave_sock)
+                    slave_sock.close()
+                    log("SLAVE IP:{} RESPONSE << {}".format(slave_obj.socket, info))
+                else:
+                    raise Exception('Slave Offline')
             except Exception, e:
                 print e
+                log_error(e)
                 info = json.dumps({
                     'status_code': 503,
                     'status_text': 'Slave offline',
@@ -335,12 +340,13 @@ class IOTPServerCore():
         return info
 
     @staticmethod
-    def handle_ping(incoming_conn, addr, client_data):
+    def handle_ping_incoming(incoming_conn, addr, client_data):
         try:
             incoming_conn.send("{},{}\n".format(PING_REPLY, client_data[7:]))
-            log("CLIENT [PING] IP:{} | RESPONSE OK >> {},{}".format(addr, PING_REPLY, client_data[7:]))
+            log("App IP:{} | PING OK >> {},{}".format(addr, PING_REPLY, client_data[7:]))
             incoming_conn.close()
-        except:
+        except Exception, e:
+            log_error(e)
             pass
 
     @staticmethod
@@ -397,7 +403,7 @@ class IOTPServerCore():
                     continue
                 log("Login OK")
 
-                log("Waiting for CMDs...")
+                log("Waiting for HTTP CMDs...")
                 while True:
                     # step 2: if session available else login
                     # step 3: read for command
@@ -415,7 +421,7 @@ class IOTPServerCore():
                         if command_count > 0:
                             # update command status to IN_EXE
                             for c in cmd_list:
-                                log("Updating CMDs status to IN_EXE...")
+                                log("Updating CMDs status to IN_EXE...", True)
                                 try:
                                     params = urllib.urlencode(
                                         {'cmd_time': c['cmd_time'], 'status': 'IN_EXE'})
@@ -431,25 +437,28 @@ class IOTPServerCore():
                                     # print response.read()
                                     pass
                                 except Exception, e:
+                                    log_error(e)
                                     pass
                             # get the last command
                             last_cmd = cmd_list[command_count - 1]
-                            log("Executing CMD...")
+                            log("Executing HTTP CMD...")
                             req = IOTPRequest()
                             req.set_type(IOPTServiceType.HTTP)
                             response_json_string = self.handle_http(req, last_cmd['command'])
                             # update command status and value
-                            log("Updating CMD to ACK_EXE...")
+                            log("Updating CMD to ACK_EXE...", True)
                             status = self.update_pending_cloud_cmd_status(last_cmd['cmd_time'], token,
                                                                           response_json_string)
 
                             if status == HTTP_UNAUTHORIZED:
                                 log("oops! session expired.")
                                 break
+                            log("Waiting for HTTP CMDs...")
                     time.sleep(OPR_WAIT_SEC)
                     pass  # cmd fetch & exe loop
                 # self.StatusLED.stop_blink(0)
             except Exception, e:
+                log_error(e)
                 pass  # any exception
             time.sleep(OPR_WAIT_SEC)
         pass  # main login loop
